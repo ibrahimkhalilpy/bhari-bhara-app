@@ -243,8 +243,13 @@
 </head>
 <body>
   <header>
-    <h1>🏠 বাড়ি ভাড়া ম্যানেজার</h1>
-    <p>সাব-মিটার · লাইন গ্যাস · অ্যাডভান্স · রসিদ</p>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <h1>🏠 বাড়ি ভাড়া ম্যানেজার</h1>
+        <p>সাব-মিটার · লাইন গ্যাস · অ্যাডভান্স · রসিদ</p>
+      </div>
+      <button onclick="driveDownload()" title="Drive থেকে সর্বশেষ ডাটা আনুন" style="background:rgba(255,255,255,0.12);border:1.5px solid rgba(251,243,222,0.35);color:#FBF3DE;width:38px;height:38px;border-radius:10px;font-size:1.05rem;cursor:pointer;flex-shrink:0">🔄</button>
+    </div>
   </header>
   <div class="container" id="app"></div>
   <nav class="bottom">
@@ -1611,6 +1616,9 @@
       html += '<label>Drive ফোল্ডার নাম</label>';
       html += '<input id="drive-folder" value="' + (D.folderName||'Rent app') + '" />';
       html += '<button class="btn btn-sm btn-secondary" style="margin-bottom:10px" onclick="saveDriveSettings()">💾 সেটিংস সেভ</button>';
+      if (_driveSilentFailed && !connected) {
+        html += '<p style="font-size:0.8rem;color:var(--danger);margin-bottom:8px">⚠️ এই ডিভাইসে নিজে থেকে Drive-এ কানেক্ট হতে পারেনি। নিচের বাটনে চেপে আবার সাইন-ইন করুন — এতে সর্বশেষ ডাটাও চলে আসবে।</p>';
+      }
       if (!connected) {
         html += '<button class="btn btn-primary" onclick="driveSignIn()">🔐 Google দিয়ে সাইন-ইন</button>';
       } else {
@@ -1667,6 +1675,7 @@
     }
 
     var _driveTokenExpiry = 0;
+    var _driveSilentFailed = false;
     function initGoogleDrive(silent, onConnect) {
       var cfg = getDriveConfig();
       if (!cfg.clientId || !cfg.clientId.trim()) {
@@ -1682,9 +1691,11 @@
         scope: DRIVE_SCOPE,
         callback: function(resp) {
           if (resp.error) {
-            if (!silent) toast('লগইন ব্যর্থ: ' + (resp.error || ''));
+            if (silent) { _driveSilentFailed = true; render(); }
+            else toast('লগইন ব্যর্থ: ' + (resp.error || ''));
             return;
           }
+          _driveSilentFailed = false;
           _driveAccessToken = resp.access_token;
           _driveTokenExpiry = Date.now() + ((resp.expires_in || 3500) * 1000);
           if (!silent) toast('Google ড্রাইভ কানেক্টেড ✓');
@@ -1850,7 +1861,7 @@
     }
 
     function driveDownload() {
-      if (!_driveAccessToken) return toast('আগে Google সাইন-ইন করুন');
+      if (!_driveAccessToken) { driveSignIn(); return; }
       toast('ডাউনলোড হচ্ছে...');
       findOrCreateFolder().then(function(folderId) {
         return findDataFile(folderId).then(function(existing) {
