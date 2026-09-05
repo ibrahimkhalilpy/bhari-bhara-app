@@ -1615,7 +1615,7 @@
         html += '<button class="btn btn-primary" onclick="driveSignIn()">🔐 Google দিয়ে সাইন-ইন</button>';
       } else {
         html += '<p style="font-size:0.82rem;color:var(--success);margin-bottom:8px">✓ কানেক্টেড</p>';
-        html += '<p style="font-size:0.78rem;color:var(--success);margin-bottom:6px">🔄 অটো-সিঙ্ক চালু — যেকোনো পরিবর্তন এখন থেকে Drive-এ নিজে থেকেই সেভ হবে</p>';
+        html += '<p style="font-size:0.78rem;color:var(--success);margin-bottom:6px">🔄 অটো-সিঙ্ক চালু — অ্যাপ খুললেই Drive থেকে সর্বশেষ ডাটা আসবে, আর যেকোনো পরিবর্তন নিজে থেকেই Drive-এ সেভ হবে</p>';
         if (D.lastSync) html += '<p id="drive-last-sync-wrap" style="font-size:0.75rem;color:var(--muted)">লাস্ট সিঙ্ক: <span id="drive-last-sync-text">' + new Date(D.lastSync).toLocaleString() + '</span></p>';
         html += '<div class="btn-row">';
         html += '<button class="btn btn-sm btn-primary" onclick="driveUpload()">⬆️ Drive এ আপলোড</button>';
@@ -1667,7 +1667,7 @@
     }
 
     var _driveTokenExpiry = 0;
-    function initGoogleDrive(silent) {
+    function initGoogleDrive(silent, onConnect) {
       var cfg = getDriveConfig();
       if (!cfg.clientId || !cfg.clientId.trim()) {
         if (!silent) toast('আগে Client ID সেট করুন (সেটিংস)');
@@ -1690,6 +1690,7 @@
           if (!silent) toast('Google ড্রাইভ কানেক্টেড ✓');
           scheduleTokenRefresh();
           render();
+          if (onConnect) onConnect();
         }
       });
       return true;
@@ -1715,7 +1716,7 @@
         tries++;
         if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
           clearInterval(iv);
-          if (!initGoogleDrive(true)) return;
+          if (!initGoogleDrive(true, downloadOnConnect)) return;
           _gisTokenClient.requestAccessToken({ prompt: '' });
         } else if (tries > 40) {
           clearInterval(iv);
@@ -1724,8 +1725,31 @@
     }
 
     function driveSignIn() {
-      if (!initGoogleDrive()) return;
+      if (!initGoogleDrive(false, downloadOnConnect)) return;
       _gisTokenClient.requestAccessToken({ prompt: 'consent' });
+    }
+
+    function downloadOnConnect() {
+      // pull the latest saved data from Drive right after connecting, so every
+      // device (phone, PC) always starts from the same up-to-date information
+      findOrCreateFolder().then(function(folderId) {
+        return findDataFile(folderId).then(function(existing) {
+          if (!existing) return; // no backup yet on Drive — this device's data will become the first one
+          return driveFetch('https://www.googleapis.com/drive/v3/files/' + existing.id + '?alt=media')
+            .then(function(data) {
+              var parsed = typeof data === 'string' ? JSON.parse(data) : data;
+              if (!parsed || !parsed.tenants) return;
+              state = parsed;
+              if (!state.currentMonth) state.currentMonth = getCurrentMonth();
+              if (!state.drive) state.drive = getDriveConfig();
+              getDriveConfig().fileId = existing.id;
+              getDriveConfig().lastSync = new Date().toISOString();
+              persistLocal();
+              render();
+              toast('Drive থেকে সর্বশেষ ডাটা লোড হয়েছে ✓');
+            });
+        });
+      }).catch(function(e) { console.error(e); });
     }
 
     function driveSignOut() {
