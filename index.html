@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#4A331B" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>বাড়ি ভাড়া ম্যানেজার</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #262016;
+      --ink-soft: #6b5f4d;
+      --paper: #EFE7D5;
+      --paper-deep: #E4D9C1;
+      --card: #FFFCF6;
+      --rule: #D9CBA8;
+      --brass: #96652B;
+      --brass-dark: #6E4A1E;
+      --brass-soft: #F0E2C4;
+      --stamp-red: #9A3A2D;
+      --stamp-red-soft: #F5E1DC;
+      --stamp-green: #3E6B49;
+      --stamp-green-soft: #E2ECDF;
+      --stamp-amber: #A6721E;
+      --stamp-amber-soft: #F3E6C8;
+      /* --- legacy variable names kept for JS-generated inline styles --- */
+      --primary: var(--brass);
+      --primary-dark: var(--brass-dark);
+      --primary-soft: var(--brass-soft);
+      --accent: var(--stamp-amber);
+      --bg: var(--paper);
+      --text: var(--ink);
+      --muted: var(--ink-soft);
+      --danger: var(--stamp-red);
+      --success: var(--stamp-green);
+      --warning: var(--stamp-amber);
+      --border: var(--rule);
+      --shadow: 0 1px 2px rgba(58,42,15,0.07), 0 10px 22px -6px rgba(58,42,15,0.16);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: 'Hind Siliguri', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--paper);
+      background-image:
+        linear-gradient(var(--paper) 0%, var(--paper) 100%),
+        repeating-linear-gradient(180deg, rgba(150,101,43,0.05) 0px, rgba(150,101,43,0.05) 1px, transparent 1px, transparent 34px);
+      color: var(--ink); min-height: 100vh;
+      padding-bottom: 92px; line-height: 1.5;
+    }
+    header {
+      background: linear-gradient(160deg, #2A2015 0%, #4A331B 55%, #6E4A22 100%);
+      color: var(--brass-soft); padding: 22px 20px 26px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 10px 26px rgba(30,20,8,0.28);
+      border-bottom: 3px solid var(--brass);
+    }
+    header h1 {
+      font-family: 'Tiro Bangla', Georgia, serif; font-size: 1.32rem; font-weight: 700;
+      letter-spacing: 0.2px; color: #FBF3DE;
+    }
+    header p { font-size: 0.78rem; opacity: 0.75; margin-top: 5px; font-weight: 500; letter-spacing: 0.3px; }
+    .container { padding: 16px; max-width: 540px; margin: 0 auto; }
+    .card {
+      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 16px; margin-bottom: 12px; border: 1px solid var(--rule);
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .tenant-card { cursor: pointer; position: relative; border-left: 3px solid var(--brass); padding-left: 14px; }
+    .tenant-card:active { transform: scale(0.985); }
+    .tenant-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .tenant-name {
+      font-family: 'Tiro Bangla', Georgia, serif; font-size: 1.08rem; font-weight: 700;
+      color: var(--ink); letter-spacing: 0.1px;
+    }
+    .floor-badge {
+      background: var(--card); color: var(--brass-dark); font-size: 0.68rem; padding: 5px 11px;
+      border-radius: 999px; white-space: nowrap; font-weight: 700;
+      border: 1.5px dashed var(--brass); letter-spacing: 0.2px;
+    }
+    .floor-badge.due { background: var(--stamp-red-soft); color: var(--stamp-red); border-color: var(--stamp-red); }
+    .floor-badge.paid { background: var(--stamp-green-soft); color: var(--stamp-green); border-color: var(--stamp-green); }
+    .floor-badge.partial { background: var(--stamp-amber-soft); color: var(--stamp-amber); border-color: var(--stamp-amber); }
+    .amount-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip {
+      background: var(--brass-soft); color: var(--brass-dark); padding: 4px 10px;
+      border-radius: 8px; font-size: 0.75rem; font-weight: 700;
+    }
+    .chip.sub { background: var(--stamp-amber-soft); color: var(--stamp-amber); }
+    .chip.gas { background: #F1E3E9; color: #8A3A54; }
+    .chip.due { background: var(--stamp-red-soft); color: var(--stamp-red); }
+    .chip.paid { background: var(--stamp-green-soft); color: var(--stamp-green); }
+    nav.bottom {
+      position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,252,246,0.96);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      display: flex; justify-content: space-around;
+      padding: 8px 0 calc(10px + env(safe-area-inset-bottom));
+      box-shadow: 0 -6px 22px rgba(58,42,15,0.10); z-index: 100;
+      border-top: 1px solid var(--rule);
+    }
+    nav.bottom button {
+      background: none; border: none; display: flex; flex-direction: column;
+      align-items: center; gap: 3px; font-size: 0.68rem; color: #A8987A;
+      padding: 6px 12px; cursor: pointer; min-width: 58px; border-radius: 10px;
+      font-weight: 600; transition: color 0.15s, background 0.15s;
+    }
+    nav.bottom button.active { color: var(--brass-dark); background: var(--brass-soft); }
+    nav.bottom button span.icon { font-size: 1.28rem; }
+    label { display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 5px; color: var(--ink-soft); }
+    input, select, textarea {
+      width: 100%; padding: 12px 14px; border: 1.5px solid var(--rule);
+      border-radius: 10px; font-size: 0.95rem; margin-bottom: 12px; background: var(--card);
+      color: var(--ink); font-family: inherit;
+      transition: border 0.15s, box-shadow 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--brass);
+      box-shadow: 0 0 0 4px rgba(150,101,43,0.14);
+    }
+    input[readonly] { background: var(--paper-deep); color: var(--ink-soft); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 12px 16px; border: none; border-radius: 10px;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: transform 0.1s, opacity 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--brass-dark), var(--brass));
+      color: #FBF3DE; width: 100%; box-shadow: 0 4px 14px rgba(110,74,30,0.32);
+    }
+    .btn-secondary { background: #E4E9EC; color: #395064; }
+    .btn-danger { background: var(--stamp-red-soft); color: var(--stamp-red); }
+    .btn-accent { background: var(--stamp-amber-soft); color: var(--stamp-amber); }
+    .btn-success { background: var(--stamp-green-soft); color: var(--stamp-green); }
+    .btn-sm { padding: 8px 12px; font-size: 0.8rem; width: auto; border-radius: 8px; }
+    .btn-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(38,32,22,0.5);
+      z-index: 200; display: none; align-items: flex-end; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--paper); width: 100%; max-width: 540px; max-height: 92vh;
+      border-radius: 20px 20px 0 0; padding: 20px 18px 32px; border-top: 3px solid var(--brass);
+      overflow-y: auto; animation: slideUp 0.25s cubic-bezier(0.32,0.72,0,1);
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-header h2 { font-family: 'Tiro Bangla', Georgia, serif; font-size: 1.15rem; font-weight: 700; color: var(--ink); }
+    .close-btn {
+      background: var(--card); border: 1px solid var(--rule); width: 36px; height: 36px;
+      border-radius: 50%; font-size: 1.1rem; cursor: pointer; color: var(--ink-soft);
+    }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .summary-card {
+      background: var(--card); border-radius: 12px; padding: 14px;
+      box-shadow: var(--shadow); text-align: center; border: 1px solid var(--rule);
+    }
+    .summary-card .label { font-size: 0.72rem; color: var(--ink-soft); font-weight: 600; }
+    .summary-card .value { font-family: 'Tiro Bangla', Georgia, serif; font-size: 1.24rem; font-weight: 700; margin-top: 4px; }
+    .summary-card.total .value { color: var(--brass-dark); }
+    .summary-card.due .value { color: var(--stamp-red); }
+    .summary-card.paid .value { color: var(--stamp-green); }
+    .month-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--card); padding: 10px 14px; border-radius: 12px;
+      margin-bottom: 14px; box-shadow: var(--shadow); border: 1px solid var(--rule);
+    }
+    .month-bar button {
+      background: linear-gradient(135deg, var(--brass-dark), var(--brass));
+      color: #FBF3DE; border: none; width: 36px; height: 36px; border-radius: 9px;
+      font-size: 1.1rem; cursor: pointer; box-shadow: 0 2px 8px rgba(110,74,30,0.3);
+    }
+    .month-bar span { font-family: 'Tiro Bangla', Georgia, serif; font-weight: 700; font-size: 0.95rem; }
+    .receipt {
+      background: repeating-linear-gradient(180deg, #FFFCF6 0px, #FFFCF6 27px, #F2E7CC 28px);
+      border: 2px dashed var(--brass); border-radius: 10px; padding: 16px;
+      font-family: 'Courier New', monospace; font-size: 0.85rem;
+    }
+    .receipt h3 { font-family: 'Tiro Bangla', Georgia, serif; text-align: center; margin-bottom: 10px; color: var(--brass-dark); font-size: 1rem; }
+    .receipt .line { display: flex; justify-content: space-between; margin: 4px 0; }
+    .receipt .total-line { border-top: 1.5px solid var(--brass); margin-top: 8px; padding-top: 8px; font-weight: 700; }
+    .receipt .due-line { color: var(--stamp-red); font-weight: 700; }
+    .tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+    .tab {
+      padding: 8px 14px; border-radius: 999px; background: var(--card);
+      border: 1px solid var(--rule); font-size: 0.8rem; white-space: nowrap; cursor: pointer; font-weight: 600; color: var(--ink-soft);
+    }
+    .tab.active { background: var(--brass); border-color: var(--brass); color: #FBF3DE; box-shadow: 0 2px 8px rgba(150,101,43,0.3); }
+    .hidden { display: none !important; }
+    .section-title {
+      font-family: 'Tiro Bangla', Georgia, serif; font-size: 0.92rem; font-weight: 700; color: var(--brass-dark);
+      margin: 16px 0 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .empty-state { text-align: center; padding: 40px 18px; color: var(--ink-soft); font-size: 0.9rem; }
+    .file-preview { max-width: 100%; max-height: 110px; border-radius: 10px; margin-top: 6px; }
+    .history-item {
+      background: var(--card); border-radius: 10px; padding: 10px 12px;
+      margin-bottom: 8px; font-size: 0.82rem; border: 1px solid var(--rule);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: var(--ink); color: var(--paper); padding: 12px 22px;
+      border-radius: 999px; font-size: 0.88rem; z-index: 300;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(38,32,22,0.3);
+    }
+    .toast.show { opacity: 1; }
+    .search-box {
+      width: 100%; padding: 12px 14px; border-radius: 12px;
+      border: 1.5px solid var(--rule); margin-bottom: 12px; font-size: 0.95rem;
+      background: var(--card); box-shadow: var(--shadow); font-family: inherit; color: var(--ink);
+    }
+    .info-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 0.88rem; border-bottom: 1px solid var(--paper-deep); }
+    .info-row:last-child { border-bottom: none; }
+    .left-badge {
+      display: inline-block; background: var(--stamp-red-soft); color: var(--stamp-red);
+      font-size: 0.7rem; padding: 3px 8px; border-radius: 6px; margin-left: 6px; font-weight: 700;
+    }
+    .reading-box {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+      background: var(--stamp-amber-soft); padding: 12px; border-radius: 10px; margin: 10px 0;
+      border: 1px solid var(--stamp-amber);
+    }
+    .reading-box label { font-size: 0.68rem; margin-bottom: 3px; }
+    .reading-box input { margin-bottom: 0; padding: 8px; font-size: 0.9rem; }
+    .bulk-actions { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .sms-box {
+      background: var(--stamp-green-soft); border: 1.5px solid var(--stamp-green); border-radius: 12px;
+      padding: 14px; font-size: 0.84rem; white-space: pre-wrap; line-height: 1.55;
+      font-family: 'Hind Siliguri', system-ui, sans-serif; margin: 10px 0; max-height: 280px; overflow-y: auto;
+    }
+</style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+</head>
+<body>
+  <header>
+    <h1>🏠 বাড়ি ভাড়া ম্যানেজার</h1>
+    <p>সাব-মিটার · লাইন গ্যাস · অ্যাডভান্স · রসিদ</p>
+  </header>
+  <div class="container" id="app"></div>
+  <nav class="bottom">
+    <button class="active" data-page="home" onclick="navigate('home')"><span class="icon">🏠</span>হোম</button>
+    <button data-page="tenants" onclick="navigate('tenants')"><span class="icon">👥</span>ভাড়াটিয়া</button>
+    <button data-page="bills" onclick="navigate('bills')"><span class="icon">🧾</span>বিল</button>
+    <button data-page="payments" onclick="navigate('payments')"><span class="icon">💰</span>পেমেন্ট</button>
+    <button data-page="settings" onclick="navigate('settings')"><span class="icon">⚙️</span>সেটিংস</button>
+  </nav>
+  <div class="modal-overlay" id="modal-overlay"><div class="modal" id="modal-content"></div></div>
+  <div class="toast" id="toast"></div>
+  <script>
+    const DEFAULT_TENANTS = [
+      { id:'t1', name:'তুতুল', floor:1, side:'Right', rent:4500, water:300, lineGas:0, hasSubMeter:false, unitRate:12, prevReading:0, mobile:'', nid:null, startMonth:'2024-01', leaveMonth:null, notes:'', advances:[], active:true },
+      { id:'t2', name:'মজিবর', floor:1, side:'Right', rent:3500, water:200, lineGas:0, hasSubMeter:false, unitRate:12, prevReading:0, mobile:'', nid:null, startMonth:'2024-01', leaveMonth:null, notes:'', advances:[], active:true },
+      { id:'t3', name:'হোসনা', floor:1, side:'Left', rent:4000, water:200, lineGas:0, hasSubMeter:false, unitRate:12, prevReading:0, mobile:'', nid:null, startMonth:'2024-01', leaveMonth:null, notes:'', advances:[], active:true },
+      { id:'t4', name:'রমজান', floor:1, side:'Left', rent:3500, water:300, lineGas:0, hasSubMeter:false, unitRate:12, prevReading:0, mobile:'', nid:null, startMonth:'2024-01', leaveMonth:null, notes:'', advances:[], active:true },
+      { id:'t5', name:'নিশাদ', floor:2, side:'', rent:6000, water:300, lineGas:0, hasSubMeter:true, unitRate:12, prevReading:0, mobile:'', nid:null, startMonth:'2024-01', leaveMonth:null, notes:'', advances:[], active:true },
+      { id:'t6', name:'লুবনা', floor:3, side:'', rent:9000, water:600, lineGas:1080, hasSubMeter:false, unitRate:12, prevReading:0, mobile:'', nid:null, startMonth:'2024-01', leaveMonth:null, notes:'', advances:[], active:true },
+      { id:'t7', name:'ফরিদ', floor:4, side:'', rent:6000, water:300, lineGas:0, hasSubMeter:false, unitRate:12, prevReading:0, mobile:'', nid:null, startMonth:'2024-01', leaveMonth:null, notes:'', advances:[], active:true },
+      { id:'t8', name:'মারুফ', floor:5, side:'Right', rent:8500, water:500, lineGas:0, hasSubMeter:false, unitRate:12, prevReading:0, mobile:'', nid:null, startMonth:'2024-01', leaveMonth:null, notes:'', advances:[], active:true },
+      { id:'t9', name:'কামাল', floor:5, side:'Left', rent:9000, water:600, lineGas:0, hasSubMeter:false, unitRate:12, prevReading:0, mobile:'', nid:null, startMonth:'2024-01', leaveMonth:null, notes:'', advances:[], active:true },
+      { id:'t10', name:'রাকিব', floor:6, side:'Right', rent:4500, water:300, lineGas:0, hasSubMeter:true, unitRate:12, prevReading:0, mobile:'', nid:null, startMonth:'2024-01', leaveMonth:null, notes:'', advances:[], active:true },
+      { id:'t11', name:'রুস্তম', floor:6, side:'Left', rent:4500, water:300, lineGas:0, hasSubMeter:true, unitRate:12, prevReading:0, mobile:'', nid:null, startMonth:'2024-01', leaveMonth:null, notes:'', advances:[], active:true }
+    ];
+    let state = { tenants: [], bills: {}, payments: [], currentMonth: getCurrentMonth(), landlord: { name: 'মোঃ জয়নাল আবেদিন', address: 'আনন্দ নগর, মেরুল বাড্ডা', phone: '01313046961' }, drive: { clientId: '', folderName: 'Rent app', fileId: null, lastSync: null } };
+    function getCurrentMonth() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    }
+    function monthLabel(ym) {
+      if (!ym) return '-';
+      const parts = ym.split('-');
+      const months = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+      return months[parseInt(parts[1])-1] + ' ' + parts[0];
+    }
+    function prevMonthKey(ym) {
+      const parts = ym.split('-').map(Number);
+      const d = new Date(parts[0], parts[1]-2, 1);
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    }
+    // Utility bills (water/gas/submeter) belong to PREVIOUS month when collecting rent for current month
+    function utilMonthKey(ym) {
+      return prevMonthKey(ym);
+    }
+    function utilMonthLabel(ym) {
+      return monthLabel(utilMonthKey(ym));
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem('rentAppData_v2');
+        if (raw) {
+          state = JSON.parse(raw);
+          if (!state.currentMonth) state.currentMonth = getCurrentMonth();
+          if (!state.landlord) {
+            state.landlord = { name: 'মোঃ জয়নাল আবেদিন', address: 'আনন্দ নগর, মেরুল বাড্ডা', phone: '01313046961' };
+          }
+          if (!state.drive) {
+            state.drive = { clientId: '', folderName: 'Rent app', fileId: null, lastSync: null };
+          }
+          state.tenants.forEach(function(t) {
+            if (t.hasElectricity !== undefined && t.hasSubMeter === undefined) { t.hasSubMeter = t.hasElectricity; }
+            if (t.gas !== undefined && t.lineGas === undefined) { t.lineGas = t.gas; }
+            if (t.unitRate === undefined) t.unitRate = 12;
+            if (t.active === undefined) t.active = true;
+            if (!t.advances) t.advances = [];
+            if (!t.extraCharges) t.extraCharges = [];
+          });
+        } else {
+          const old = localStorage.getItem('rentAppData');
+          if (old) {
+            state = JSON.parse(old);
+            state.tenants.forEach(function(t) {
+              t.hasSubMeter = !!t.hasElectricity;
+              t.lineGas = t.gas || 0;
+              t.unitRate = 12;
+              t.active = true;
+              if (!t.advances) t.advances = [];
+            if (!t.extraCharges) t.extraCharges = [];
+            });
+          } else {
+            state.tenants = JSON.parse(JSON.stringify(DEFAULT_TENANTS));
+            state.bills = {};
+            state.payments = [];
+          }
+          state.currentMonth = getCurrentMonth();
+          if (!state.landlord) {
+            state.landlord = { name: 'মোঃ জয়নাল আবেদিন', address: 'আনন্দ নগর, মেরুল বাড্ডা', phone: '01313046961' };
+          }
+          if (!state.drive) {
+            state.drive = { clientId: '', folderName: 'Rent app', fileId: null, lastSync: null };
+          }
+          saveState();
+        }
+      } catch(e) {
+        state.tenants = JSON.parse(JSON.stringify(DEFAULT_TENANTS));
+        state.landlord = { name: 'মোঃ জয়নাল আবেদিন', address: 'আনন্দ নগর, মেরুল বাড্ডা', phone: '01313046961' };
+      }
+    }
+    var _syncTimer = null;
+    function persistLocal() { localStorage.setItem('rentAppData_v2', JSON.stringify(state)); }
+    function saveState() {
+      persistLocal();
+      scheduleDriveSync();
+    }
+    function scheduleDriveSync() {
+      if (!_driveAccessToken) return;
+      if (_syncTimer) clearTimeout(_syncTimer);
+      _syncTimer = setTimeout(function(){ driveUpload(true); }, 1500);
+    }
+    function toast(msg) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(function(){ t.classList.remove('show'); }, 2400);
+    }
+    function floorText(t) {
+      var s = t.floor + ' তলা';
+      if (t.side) s += ' (' + (t.side === 'Right' ? 'ডান' : 'বাম') + ')';
+      return s;
+    }
+    function activeTenants() { return state.tenants.filter(function(t){ return t.active !== false; }); }
+    function getPrevReading(tenant, monthKey) {
+      // Walk backward month by month to find the latest currentReading before this month
+      var mk = prevMonthKey(monthKey);
+      for (var i = 0; i < 24; i++) {
+        var prevBill = state.bills[mk] && state.bills[mk][tenant.id];
+        if (prevBill && prevBill.currentReading !== undefined && prevBill.currentReading !== null) {
+          return parseInt(prevBill.currentReading) || 0;
+        }
+        mk = prevMonthKey(mk);
+      }
+      return tenant.prevReading || 0;
+    }
+    function calcBill(tenant, monthKey) {
+      var b = (state.bills[monthKey] && state.bills[monthKey][tenant.id]) || {};
+      var rent = tenant.rent;
+      var water = tenant.water;
+      var lineGas = tenant.lineGas || 0;
+      var units = 0, electricity = 0, currentReading = null, prevReading = 0;
+      if (tenant.hasSubMeter) {
+        prevReading = getPrevReading(tenant, monthKey);
+        currentReading = (b.currentReading !== undefined && b.currentReading !== null) ? b.currentReading : null;
+        if (currentReading !== null) {
+          units = Math.max(0, currentReading - prevReading);
+        } else {
+          units = b.units || 0;
+        }
+        electricity = units * (tenant.unitRate || 12);
+      }
+      // Extra bills (moyla etc.) — can override per month in b.extraAmounts
+      var extras = [];
+      var extraTotal = 0;
+      var list = tenant.extraCharges || [];
+      list.forEach(function(ex) {
+        if (!ex || !ex.name) return;
+        var amt = (b.extraAmounts && b.extraAmounts[ex.name] !== undefined)
+          ? (parseInt(b.extraAmounts[ex.name]) || 0)
+          : (parseInt(ex.amount) || 0);
+        if (amt > 0 || (ex.amount && parseInt(ex.amount) > 0)) {
+          extras.push({ name: ex.name, amount: amt });
+          extraTotal += amt;
+        }
+      });
+      var total = rent + water + lineGas + electricity + extraTotal;
+      var paidAmount = b.paidAmount || 0;
+      var paid = paidAmount > 0;
+      var due = Math.max(0, total - paidAmount);
+      return { rent:rent, water:water, lineGas:lineGas, electricity:electricity, units:units, extras:extras, extraTotal:extraTotal, total:total, paid:paid, paidAmount:paidAmount, due:due, paidDate:b.paidDate||'', note:b.note||'', currentReading:currentReading, prevReading:prevReading };
+    }
+    function getTotalDue(tenant) {
+      var total = 0;
+      Object.keys(state.bills).forEach(function(mk) {
+        if (!tenant.active && tenant.leaveMonth && mk > tenant.leaveMonth) return;
+        var bill = calcBill(tenant, mk);
+        total += bill.due;
+      });
+      return total;
+    }
+    function ensureMonthBills(monthKey) {
+      if (!state.bills[monthKey]) state.bills[monthKey] = {};
+      activeTenants().forEach(function(t) {
+        if (!state.bills[monthKey][t.id]) {
+          state.bills[monthKey][t.id] = { currentReading: null, units: 0, paidAmount: 0, paidDate: '', note: '' };
+        }
+      });
+    }
+    var currentPage = 'home';
+    function navigate(page) {
+      currentPage = page;
+      document.querySelectorAll('nav.bottom button').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.page === page);
+      });
+      render();
+    }
+    function openModal(html) {
+      document.getElementById('modal-content').innerHTML = html;
+      document.getElementById('modal-overlay').classList.add('show');
+    }
+    function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+    document.getElementById('modal-overlay').addEventListener('click', function(e) {
+      if (e.target.id === 'modal-overlay') closeModal();
+    });
+    function render() {
+      var app = document.getElementById('app');
+      if (currentPage === 'home') app.innerHTML = renderHome();
+      else if (currentPage === 'tenants') app.innerHTML = renderTenants();
+      else if (currentPage === 'bills') app.innerHTML = renderBills();
+      else if (currentPage === 'payments') app.innerHTML = renderPayments();
+      else if (currentPage === 'settings') app.innerHTML = renderSettings();
+    }
+    function renderHome() {
+      var m = state.currentMonth;
+      ensureMonthBills(m);
+      var tenants = activeTenants();
+      var totalDue = 0, totalPaid = 0, countDue = 0;
+      tenants.forEach(function(t) {
+        var bill = calcBill(t, m);
+        totalDue += bill.total;
+        totalPaid += bill.paidAmount;
+        if (bill.due > 0) countDue++;
+      });
+      var remaining = totalDue - totalPaid;
+      var html = '<div class="month-bar"><button onclick="changeMonth(-1)">‹</button><span>' + monthLabel(m) + '</span><button onclick="changeMonth(1)">›</button></div>';
+      html += '<div class="summary-grid">';
+      html += '<div class="summary-card total"><div class="label">মোট বিল</div><div class="value">৳' + totalDue.toLocaleString() + '</div></div>';
+      html += '<div class="summary-card paid"><div class="label">সংগৃহীত</div><div class="value">৳' + totalPaid.toLocaleString() + '</div></div>';
+      html += '<div class="summary-card due"><div class="label">বাকি</div><div class="value">৳' + remaining.toLocaleString() + '</div></div>';
+      html += '<div class="summary-card"><div class="label">বাকি ফ্যামিলি</div><div class="value">' + countDue + '</div></div></div>';
+      html += '<div class="section-title">📋 এই মাসের স্ট্যাটাস</div>';
+      tenants.forEach(function(t) {
+        var bill = calcBill(t, m);
+        var badge = '⏳ বাকি', cls = 'due';
+        if (bill.due === 0 && bill.paidAmount > 0) { badge = '✅ পরিশোধ'; cls = 'paid'; }
+        else if (bill.paidAmount > 0 && bill.due > 0) { badge = '◐ আংশিক'; cls = 'partial'; }
+        html += '<div class="card tenant-card" onclick="openTenantDetail(\'' + t.id + '\')">';
+        html += '<div class="tenant-header"><div><div class="tenant-name">' + t.name + '</div>';
+        html += '<div style="font-size:0.72rem;color:var(--muted)">' + floorText(t) + '</div></div>';
+        html += '<span class="floor-badge ' + cls + '">' + badge + '</span></div>';
+        html += '<div class="amount-row"><span class="chip">ভাড়া ৳' + bill.rent + '</span>';
+        if (bill.water) html += '<span class="chip">পানি ৳' + bill.water + '</span>';
+        if (bill.lineGas) html += '<span class="chip gas">লাইন গ্যাস ৳' + bill.lineGas + '</span>';
+        if (t.hasSubMeter) html += '<span class="chip sub">সাব-মিটার ৳' + bill.electricity + ' (' + bill.units + 'u)</span>';
+        html += '</div><div style="font-weight:700;margin-top:6px;font-size:0.92rem">মোট: ৳' + bill.total.toLocaleString();
+        if (bill.due > 0) html += '<span style="color:var(--danger);font-size:0.82rem"> · বাকি ৳' + bill.due + '</span>';
+        else html += '<span style="color:var(--success);font-size:0.82rem"> · পরিশোধিত</span>';
+        html += '</div></div>';
+      });
+      return html;
+    }
+    function changeMonth(delta) {
+      var parts = state.currentMonth.split('-').map(Number);
+      var d = new Date(parts[0], parts[1]-1+delta, 1);
+      state.currentMonth = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      saveState(); render();
+    }
+    function renderTenants() {
+      var active = activeTenants();
+      var left = state.tenants.filter(function(t){ return t.active === false; });
+      var html = '<input class="search-box" placeholder="নাম দিয়ে খুঁজুন..." oninput="filterTenants(this.value)" id="tenant-search" />';
+      html += '<div id="tenant-list">';
+      active.forEach(function(t){ html += tenantCardHtml(t, false); });
+      html += '</div>';
+      if (left.length) {
+        html += '<div class="section-title">🚪 চলে যাওয়া ভাড়াটিয়া</div>';
+        left.forEach(function(t){ html += tenantCardHtml(t, true); });
+      }
+      html += '<button class="btn btn-primary" style="margin-top:10px" onclick="openAddTenant()">+ নতুন ভাড়াটিয়া যোগ</button>';
+      return html;
+    }
+    function tenantCardHtml(t, isLeft) {
+      var html = '<div class="card tenant-card" onclick="openTenantDetail(\'' + t.id + '\')">';
+      html += '<div class="tenant-header"><div><div class="tenant-name">' + t.name;
+      if (isLeft) html += '<span class="left-badge">চলে গেছে</span>';
+      html += '</div><div style="font-size:0.72rem;color:var(--muted)">' + floorText(t);
+      if (t.startMonth) html += ' · শুরু: ' + monthLabel(t.startMonth);
+      html += '</div></div><span class="floor-badge">৳' + t.rent + '</span></div>';
+      html += '<div class="amount-row"><span class="chip">পানি ৳' + t.water + '</span>';
+      if (t.lineGas) html += '<span class="chip gas">লাইন গ্যাস ৳' + t.lineGas + '</span>';
+      if (t.hasSubMeter) html += '<span class="chip sub">সাব-মিটার ৳' + (t.unitRate||12) + '/u</span>';
+      if (t.mobile) html += '<span class="chip">📱 ' + t.mobile + '</span>';
+      if ((t.advances||[]).length) html += '<span class="chip paid">অ্যাডভান্স ' + t.advances.length + '</span>';
+      html += '</div></div>';
+      return html;
+    }
+    function filterTenants(q) {
+      var list = document.getElementById('tenant-list');
+      var filtered = activeTenants().filter(function(t){ return t.name.indexOf(q) >= 0 || floorText(t).indexOf(q) >= 0; });
+      if (!filtered.length) { list.innerHTML = '<div class="empty-state">কোনো ফলাফল নেই</div>'; return; }
+      var html = '';
+      filtered.forEach(function(t){ html += tenantCardHtml(t, false); });
+      list.innerHTML = html;
+    }
+    function openTenantDetail(id) {
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      if (!t) return;
+      var totalDue = getTotalDue(t);
+      var advancesHtml = '';
+      if ((t.advances||[]).length) {
+        t.advances.forEach(function(a, i) {
+          advancesHtml += '<div class="history-item"><div><strong>৳' + a.amount.toLocaleString() + '</strong> · ' + (a.date||'-');
+          if (a.forMonth) advancesHtml += '<br><small>মাস: ' + monthLabel(a.forMonth) + '</small>';
+          if (a.note) advancesHtml += '<br><small>' + a.note + '</small>';
+          advancesHtml += '</div><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removeAdvance(\'' + id + '\',' + i + ')">✕</button></div>';
+        });
+      } else {
+        advancesHtml = '<div style="color:#94a3b8;font-size:0.82rem">কোনো অ্যাডভান্স নেই — নিচে যোগ করুন</div>';
+      }
+      var html = '<div class="modal-header"><h2>' + t.name;
+      if (!t.active) html += ' <span class="left-badge">চলে গেছে</span>';
+      html += '</h2><button class="close-btn" onclick="closeModal()">✕</button></div>';
+      html += '<div class="tabs">';
+      html += '<button class="tab active" onclick="switchTab(this,\'info\')">তথ্য</button>';
+      html += '<button class="tab" onclick="switchTab(this,\'edit\')">এডিট</button>';
+      html += '<button class="tab" onclick="switchTab(this,\'advance\')">অ্যাডভান্স</button>';
+      html += '<button class="tab" onclick="switchTab(this,\'nid\')">NID</button>';
+      html += '<button class="tab" onclick="switchTab(this,\'leave\')">চলে যাওয়া</button></div>';
+      html += '<div id="tab-info">';
+      html += '<div class="info-row"><span>ফ্লোর</span><strong>' + floorText(t) + '</strong></div>';
+      html += '<div class="info-row"><span>ভাড়া</span><strong>৳' + t.rent + '</strong></div>';
+      html += '<div class="info-row"><span>পানি</span><strong>৳' + t.water + '</strong></div>';
+      html += '<div class="info-row"><span>লাইন গ্যাস</span><strong>' + (t.lineGas ? '৳'+t.lineGas : 'নেই') + '</strong></div>';
+      html += '<div class="info-row"><span>সাব-মিটার</span><strong>' + (t.hasSubMeter ? 'আছে (৳'+(t.unitRate||12)+'/unit)' : 'নেই') + '</strong></div>';
+      if (t.hasSubMeter) html += '<div class="info-row"><span>বর্তমান Previous Reading</span><strong>' + (t.prevReading||0) + '</strong></div>';
+      html += '<div class="info-row"><span>মোবাইল</span><strong>' + (t.mobile||'নেই') + '</strong></div>';
+      html += '<div class="info-row"><span>শুরুর মাস</span><strong>' + monthLabel(t.startMonth) + '</strong></div>';
+      if (t.leaveMonth) html += '<div class="info-row"><span>চলে যাওয়ার মাস</span><strong>' + monthLabel(t.leaveMonth) + '</strong></div>';
+      html += '<div class="info-row"><span>মোট বাকি (সব মাস)</span><strong style="color:' + (totalDue>0?'var(--danger)':'var(--success)') + '">৳' + totalDue.toLocaleString() + '</strong></div>';
+      html += '<div class="section-title">📜 পেমেন্ট হিস্ট্রি</div>';
+      var tPays = state.payments.filter(function(p){ return p.tenantId === id; });
+      if (!tPays.length) {
+        html += '<div style="color:#94a3b8;font-size:0.82rem">এখনো কোনো পেমেন্ট নেই</div>';
+      } else {
+        tPays.slice(0, 15).forEach(function(p) {
+          var ms = p.months ? p.months.map(function(m){ return monthLabel(m); }).join(', ') : monthLabel(p.month);
+          html += '<div class="history-item"><div><strong>৳' + p.amount.toLocaleString() + '</strong> · ' + ms + '<br><small>' + p.date + (p.payMethod ? ' · ' + p.payMethod : '') + (p.note ? ' · ' + p.note : '') + '</small></div></div>';
+        });
+      }
+
+      if (t.notes) html += '<div class="info-row"><span>নোট</span><strong>' + t.notes + '</strong></div>';
+      html += '</div>';
+      html += '<div id="tab-edit" class="hidden">';
+      html += '<label>নাম</label><input id="edit-name" value="' + t.name + '" />';
+      html += '<label>ফ্লোর</label><input id="edit-floor" type="number" value="' + t.floor + '" />';
+      html += '<label>সাইড (Left / Right / খালি)</label><input id="edit-side" value="' + (t.side||'') + '" />';
+      html += '<label>ভাড়া (৳)</label><input id="edit-rent" type="number" value="' + t.rent + '" />';
+      html += '<label>পানি বিল (৳)</label><input id="edit-water" type="number" value="' + t.water + '" />';
+      html += '<label>লাইন গ্যাস (৳) — ০ হলে নেই</label><input id="edit-linegas" type="number" value="' + (t.lineGas||0) + '" />';
+      html += '<div class="section-title">অতিরিক্ত বিল (ময়লা ইত্যাদি)</div>';
+      html += '<p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">এখন লাগবে না, পরে যোগ করতে পারবেন। নাম + টাকা। ইউটিলিটির মতো আগের মাসের বিল হিসেবে দেখাবে।</p>';
+      html += '<div id="extra-list">';
+      var extras = t.extraCharges || [];
+      if (!extras.length) {
+        html += '<div style="font-size:0.8rem;color:#94a3b8;margin-bottom:8px">কোনো অতিরিক্ত বিল নেই</div>';
+      } else {
+        extras.forEach(function(ex, i) {
+          html += '<div class="history-item"><div><strong>' + ex.name + '</strong> — ৳' + (ex.amount||0) + '</div>';
+          html += '<button class="btn btn-sm btn-danger" onclick="removeExtraCharge(\'' + id + '\',' + i + ')">✕</button></div>';
+        });
+      }
+      html += '</div>';
+      html += '<label>নতুন বিলের নাম</label><input id="extra-name" placeholder="যেমন: ময়লা বিল" />';
+      html += '<label>টাকা (৳)</label><input id="extra-amount" type="number" value="0" />';
+      html += '<button class="btn btn-sm btn-secondary" style="margin-bottom:12px" onclick="addExtraCharge(\'' + id + '\')">+ বিল যোগ</button>';
+      html += '<label>সাব-মিটার আছে?</label><select id="edit-sub" onchange="toggleSubFields()"><option value="1"' + (t.hasSubMeter?' selected':'') + '>হ্যাঁ</option><option value="0"' + (!t.hasSubMeter?' selected':'') + '>না</option></select>';
+      html += '<div id="sub-fields"' + (t.hasSubMeter ? '' : ' class="hidden"') + '>';
+      html += '<label>ইউনিট রেট (৳)</label><input id="edit-rate" type="number" value="' + (t.unitRate||12) + '" />';
+      html += '<label>শুরুর Previous Reading (প্রথম মাসের জন্য)</label><input id="edit-prev" type="number" value="' + (t.prevReading||0) + '" />';
+      html += '</div>';
+      html += '<label>মোবাইল</label><input id="edit-mobile" value="' + (t.mobile||'') + '" placeholder="01XXXXXXXXX" />';
+      html += '<label>শুরুর মাস (YYYY-MM)</label><input id="edit-start" value="' + (t.startMonth||'') + '" />';
+      html += '<label>নোট</label><textarea id="edit-notes" rows="2">' + (t.notes||'') + '</textarea>';
+      html += '<button class="btn btn-primary" onclick="saveTenantEdit(\'' + id + '\')">💾 সেভ করুন</button></div>';
+      html += '<div id="tab-advance" class="hidden">';
+      html += '<label>অ্যাডভান্স পরিমাণ (৳)</label><input id="adv-amount" type="number" placeholder="যেমন 5000" />';
+      html += '<label>তারিখ</label><input id="adv-date" type="date" value="' + new Date().toISOString().slice(0,10) + '" />';
+      html += '<label>কোন মাসের জন্য? (ঐচ্ছিক)</label><input id="adv-month" type="month" value="' + state.currentMonth + '" />';
+      html += '<label>নোট</label><input id="adv-note" placeholder="ভাড়া / বিল বাবদ" />';
+      html += '<button class="btn btn-primary" onclick="addAdvance(\'' + id + '\')">যোগ করুন</button>';
+      html += '<div class="section-title">অ্যাডভান্স হিস্ট্রি</div>' + advancesHtml + '</div>';
+      html += '<div id="tab-nid" class="hidden">';
+      html += '<label>NID কার্ড ছবি আপলোড</label>';
+      html += '<input type="file" accept="image/*" id="nid-file" onchange="handleNidUpload(\'' + id + '\', this)" />';
+      if (t.nid) {
+        html += '<img src="' + t.nid + '" class="file-preview" alt="NID" /><br><button class="btn btn-sm btn-danger" style="margin-top:8px" onclick="removeNid(\'' + id + '\')">মুছে ফেলুন</button>';
+      } else {
+        html += '<p style="color:#94a3b8;font-size:0.85rem">কোনো NID নেই</p>';
+      }
+      html += '</div>';
+      html += '<div id="tab-leave" class="hidden">';
+      if (t.active) {
+        html += '<p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px">ভাড়াটিয়া চলে গেলে এখান থেকে মার্ক করুন। চাইলে পরে পুরোপুরি ডিলিট করতে পারবেন।</p>';
+        html += '<label>কোন মাসে চলে যাচ্ছে?</label><input id="leave-month" type="month" value="' + state.currentMonth + '" />';
+        html += '<div style="background:#fef2f2;padding:10px;border-radius:10px;margin:10px 0;font-size:0.85rem">বর্তমান মোট বাকি: <strong style="color:var(--danger)">৳' + totalDue.toLocaleString() + '</strong></div>';
+        html += '<button class="btn btn-danger" onclick="markLeft(\'' + id + '\')">🚪 চলে গেছে মার্ক করুন</button>';
+      } else {
+        html += '<p style="font-size:0.85rem;margin-bottom:10px">এই ভাড়াটিয়া <strong>' + monthLabel(t.leaveMonth) + '</strong> মাসে চলে গেছে।</p>';
+        html += '<div style="background:#fef2f2;padding:10px;border-radius:10px;margin:10px 0;font-size:0.85rem">মোট বাকি: <strong style="color:var(--danger)">৳' + totalDue.toLocaleString() + '</strong></div>';
+        html += '<button class="btn btn-secondary" onclick="reactivateTenant(\'' + id + '\')">↩️ আবার অ্যাকটিভ করুন</button>';
+        html += '<button class="btn btn-danger" style="margin-top:8px" onclick="deleteTenant(\'' + id + '\')">🗑️ পুরোপুরি ডিলিট করুন</button>';
+      }
+      html += '</div>';
+      openModal(html);
+    }
+    function switchTab(btn, tab) {
+      btn.parentElement.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+      btn.classList.add('active');
+      ['info','edit','advance','nid','leave'].forEach(function(id) {
+        var el = document.getElementById('tab-'+id);
+        if (el) el.classList.toggle('hidden', id !== tab);
+      });
+    }
+    
+    
+    function addExtraCharge(id) {
+      var name = (document.getElementById('extra-name') || {}).value;
+      var amount = parseInt((document.getElementById('extra-amount') || {}).value) || 0;
+      if (!name || !name.trim()) return toast('বিলের নাম দিন');
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      if (!t.extraCharges) t.extraCharges = [];
+      t.extraCharges.push({ name: name.trim(), amount: amount });
+      saveState();
+      toast('অতিরিক্ত বিল যোগ হয়েছে');
+      openTenantDetail(id);
+      setTimeout(function(){
+        var tabs = document.querySelectorAll('.tab');
+        if (tabs[1]) switchTab(tabs[1], 'edit');
+      }, 50);
+    }
+    function removeExtraCharge(id, idx) {
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      if (t.extraCharges) t.extraCharges.splice(idx, 1);
+      saveState();
+      openTenantDetail(id);
+      setTimeout(function(){
+        var tabs = document.querySelectorAll('.tab');
+        if (tabs[1]) switchTab(tabs[1], 'edit');
+      }, 50);
+    }
+    
+    function toggleSubFields() {
+      var el = document.getElementById('sub-fields');
+      var sel = document.getElementById('edit-sub');
+      if (el && sel) el.classList.toggle('hidden', sel.value !== '1');
+    }
+    function toggleNewSubFields() {
+      var el = document.getElementById('new-sub-fields');
+      var sel = document.getElementById('new-sub');
+      if (el && sel) el.classList.toggle('hidden', sel.value !== '1');
+    }
+
+    function saveTenantEdit(id) {
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      t.name = document.getElementById('edit-name').value.trim() || t.name;
+      t.floor = parseInt(document.getElementById('edit-floor').value) || t.floor;
+      t.side = document.getElementById('edit-side').value.trim();
+      t.rent = parseInt(document.getElementById('edit-rent').value) || 0;
+      t.water = parseInt(document.getElementById('edit-water').value) || 0;
+      t.lineGas = parseInt(document.getElementById('edit-linegas').value) || 0;
+      t.hasSubMeter = document.getElementById('edit-sub').value === '1';
+      if (t.hasSubMeter) {
+        var rateEl = document.getElementById('edit-rate');
+        var prevEl = document.getElementById('edit-prev');
+        t.unitRate = rateEl ? (parseInt(rateEl.value) || 12) : (t.unitRate || 12);
+        t.prevReading = prevEl ? (parseInt(prevEl.value) || 0) : (t.prevReading || 0);
+      }
+      t.mobile = document.getElementById('edit-mobile').value.trim();
+      t.startMonth = document.getElementById('edit-start').value.trim();
+      t.notes = document.getElementById('edit-notes').value.trim();
+      saveState(); toast('সেভ হয়েছে ✓'); closeModal(); render();
+    }
+    function addAdvance(id) {
+      var amount = parseInt(document.getElementById('adv-amount').value);
+      if (!amount) return toast('পরিমাণ দিন');
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      if (!t.advances) t.advances = [];
+            if (!t.extraCharges) t.extraCharges = [];
+      t.advances.push({
+        amount: amount,
+        date: document.getElementById('adv-date').value,
+        forMonth: document.getElementById('adv-month').value || null,
+        note: document.getElementById('adv-note').value
+      });
+      saveState(); toast('অ্যাডভান্স যোগ হয়েছে');
+      openTenantDetail(id);
+      setTimeout(function(){ var tabs = document.querySelectorAll('.tab'); if (tabs[2]) switchTab(tabs[2], 'advance'); }, 50);
+    }
+    function removeAdvance(id, idx) {
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      t.advances.splice(idx, 1);
+      saveState();
+      openTenantDetail(id);
+      setTimeout(function(){ var tabs = document.querySelectorAll('.tab'); if (tabs[2]) switchTab(tabs[2], 'advance'); }, 50);
+    }
+    function handleNidUpload(id, input) {
+      var file = input.files[0];
+      if (!file) return;
+      if (file.size > 900000) return toast('ছবি খুব বড় (৯০০KB এর নিচে)');
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        state.tenants.find(function(x){ return x.id === id; }).nid = e.target.result;
+        saveState(); toast('NID সেভ হয়েছে');
+        openTenantDetail(id);
+        setTimeout(function(){ var tabs = document.querySelectorAll('.tab'); if (tabs[3]) switchTab(tabs[3], 'nid'); }, 50);
+      };
+      reader.readAsDataURL(file);
+    }
+    function removeNid(id) {
+      state.tenants.find(function(x){ return x.id === id; }).nid = null;
+      saveState(); openTenantDetail(id);
+      setTimeout(function(){ var tabs = document.querySelectorAll('.tab'); if (tabs[3]) switchTab(tabs[3], 'nid'); }, 50);
+    }
+    function markLeft(id) {
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      t.active = false;
+      t.leaveMonth = document.getElementById('leave-month').value || state.currentMonth;
+      saveState(); toast(t.name + ' চলে গেছে মার্ক হয়েছে'); closeModal(); render();
+    }
+    function reactivateTenant(id) {
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      t.active = true; t.leaveMonth = null;
+      saveState(); toast('আবার অ্যাকটিভ হয়েছে'); closeModal(); render();
+    }
+    function deleteTenant(id) {
+      if (!confirm('পুরোপুরি ডিলিট করবেন? সব ডাটা মুছে যাবে।')) return;
+      state.tenants = state.tenants.filter(function(x){ return x.id !== id; });
+      Object.keys(state.bills).forEach(function(mk){ delete state.bills[mk][id]; });
+      state.payments = state.payments.filter(function(p){ return p.tenantId !== id; });
+      saveState(); toast('ডিলিট হয়েছে'); closeModal(); render();
+    }
+    function openAddTenant() {
+      var html = '<div class="modal-header"><h2>নতুন ভাড়াটিয়া</h2><button class="close-btn" onclick="closeModal()">✕</button></div>';
+      html += '<label>নাম *</label><input id="new-name" placeholder="নাম" />';
+      html += '<label>ফ্লোর *</label><input id="new-floor" type="number" placeholder="1-6" />';
+      html += '<label>সাইড (Left/Right)</label><input id="new-side" placeholder="Left বা Right" />';
+      html += '<label>ভাড়া (৳) *</label><input id="new-rent" type="number" />';
+      html += '<label>পানি (৳)</label><input id="new-water" type="number" value="0" />';
+      html += '<label>লাইন গ্যাস (৳)</label><input id="new-linegas" type="number" value="0" />';
+      html += '<label>সাব-মিটার আছে?</label><select id="new-sub" onchange="toggleNewSubFields()"><option value="0">না</option><option value="1">হ্যাঁ</option></select>';
+      html += '<div id="new-sub-fields" class="hidden">';
+      html += '<label>ইউনিট রেট (৳)</label><input id="new-rate" type="number" value="12" />';
+      html += '<label>শুরুর Previous Reading</label><input id="new-prev" type="number" value="0" />';
+      html += '</div>';
+      html += '<label>মোবাইল</label><input id="new-mobile" />';
+      html += '<label>শুরুর মাস</label><input id="new-start" type="month" value="' + getCurrentMonth() + '" />';
+      html += '<label>অ্যাডভান্স (যদি থাকে)</label><input id="new-adv" type="number" value="0" placeholder="৳" />';
+      html += '<label>অ্যাডভান্স কোন মাসের জন্য?</label><input id="new-adv-month" type="month" value="' + getCurrentMonth() + '" />';
+      html += '<button class="btn btn-primary" onclick="addNewTenant()">যোগ করুন</button>';
+      openModal(html);
+    }
+    function addNewTenant() {
+      var name = document.getElementById('new-name').value.trim();
+      if (!name) return toast('নাম দিন');
+      var id = 't' + Date.now();
+      var adv = parseInt(document.getElementById('new-adv').value) || 0;
+      var hasSub = document.getElementById('new-sub').value === '1';
+      var tenant = {
+        id: id, name: name,
+        floor: parseInt(document.getElementById('new-floor').value) || 1,
+        side: document.getElementById('new-side').value.trim(),
+        rent: parseInt(document.getElementById('new-rent').value) || 0,
+        water: parseInt(document.getElementById('new-water').value) || 0,
+        lineGas: parseInt(document.getElementById('new-linegas').value) || 0,
+        hasSubMeter: hasSub,
+        unitRate: hasSub ? (parseInt(document.getElementById('new-rate').value) || 12) : 12,
+        prevReading: hasSub ? (parseInt(document.getElementById('new-prev').value) || 0) : 0,
+        mobile: document.getElementById('new-mobile').value.trim(),
+        nid: null,
+        startMonth: document.getElementById('new-start').value || getCurrentMonth(),
+        leaveMonth: null, notes: '', advances: [], active: true
+      };
+      if (adv > 0) {
+        tenant.advances.push({
+          amount: adv,
+          date: new Date().toISOString().slice(0,10),
+          forMonth: document.getElementById('new-adv-month').value || null,
+          note: 'শুরুতে অ্যাডভান্স'
+        });
+      }
+      state.tenants.push(tenant);
+      saveState(); toast('নতুন ভাড়াটিয়া যোগ হয়েছে'); closeModal(); navigate('tenants');
+    }
+    function renderBills() {
+      var m = state.currentMonth;
+      ensureMonthBills(m);
+      var tenants = activeTenants();
+      var html = '<div class="month-bar"><button onclick="changeMonth(-1)">‹</button><span>' + monthLabel(m) + '</span><button onclick="changeMonth(1)">›</button></div>';
+      html += '<div class="bulk-actions">';
+      html += '<button class="btn btn-sm btn-accent" onclick="bulkBillReceipts()">🧾 সব বিল রসিদ</button>';
+      html += '<button class="btn btn-sm btn-success" onclick="bulkPaymentReceipts()">💰 সব পেমেন্ট রসিদ</button></div>';
+      html += '<p style="font-size:0.8rem;color:var(--muted);margin-bottom:10px">সাব-মিটার থাকলে নতুন রিডিং দিন। একাধিক মাসের বাকি একসাথে পরিশোধ করা যাবে।</p>';
+      tenants.forEach(function(t) {
+        var bill = calcBill(t, m);
+        var totalDueAll = getTotalDue(t);
+        var prevDue = totalDueAll - bill.due;
+        var statusHtml = '';
+        if (bill.due === 0 && bill.paidAmount > 0) statusHtml = '<span class="chip paid">✅ পরিশোধিত ৳' + bill.paidAmount + '</span>';
+        else if (bill.paidAmount > 0) statusHtml = '<span class="chip" style="background:#fef3c7;color:#92400e">◐ আংশিক · বাকি ৳' + bill.due + '</span>';
+        else statusHtml = '<span class="chip due">⏳ বাকি ৳' + bill.due + '</span>';
+
+        var b = (state.bills[m] && state.bills[m][t.id]) || {};
+        var smsHtml = '';
+        if (bill.paidAmount > 0) {
+          if (b.smsSent) {
+            smsHtml = '<span class="chip paid">📱 SMS Done</span> <button class="btn btn-sm btn-accent" onclick="resendSms(\'' + t.id + '\',\'' + m + '\')">Resend</button>';
+          } else {
+            smsHtml = '<button class="btn btn-sm btn-accent" onclick="resendSms(\'' + t.id + '\',\'' + m + '\')">📱 SMS পাঠান / Resend</button>';
+          }
+        }
+
+        html += '<div class="card"><div class="tenant-header"><div><div class="tenant-name">' + t.name + '</div>';
+        html += '<div style="font-size:0.72rem;color:var(--muted)">' + floorText(t) + ' · ' + monthLabel(m) + '</div></div>';
+        html += '<span class="floor-badge">৳' + bill.total + '</span></div>';
+        html += '<div class="amount-row" style="margin:7px 0"><span class="chip">ভাড়া(' + monthLabel(m) + ') ৳' + bill.rent + '</span>';
+        html += '<span class="chip">পানি(' + utilMonthLabel(m) + ') ৳' + bill.water + '</span>';
+        if (bill.lineGas) html += '<span class="chip gas">গ্যাস(' + utilMonthLabel(m) + ') ৳' + bill.lineGas + '</span>';
+        if (t.hasSubMeter) html += '<span class="chip sub">সাব(' + utilMonthLabel(m) + ') ৳' + bill.electricity + '</span>';
+        if (bill.extras && bill.extras.length) {
+          bill.extras.forEach(function(ex) {
+            html += '<span class="chip">' + ex.name + '(' + utilMonthLabel(m) + ') ৳' + ex.amount + '</span>';
+          });
+        }
+        html += '</div>' + statusHtml;
+        if (prevDue > 0) {
+          html += '<div style="font-size:0.8rem;color:var(--danger);margin-top:6px">⚠️ আগের মাসের বাকি: ৳' + prevDue.toLocaleString() + ' · <strong>মোট বাকি: ৳' + totalDueAll.toLocaleString() + '</strong></div>';
+        } else if (totalDueAll > bill.due) {
+          html += '<div style="font-size:0.8rem;color:var(--danger);margin-top:6px">মোট বাকি: ৳' + totalDueAll.toLocaleString() + '</div>';
+        }
+        if (t.hasSubMeter) {
+          html += '<div class="reading-box"><div><label>Previous</label><input type="number" value="' + bill.prevReading + '" readonly /></div>';
+          html += '<div><label>নতুন রিডিং</label><input type="number" id="reading-' + t.id + '" value="' + (bill.currentReading !== null ? bill.currentReading : '') + '" placeholder="লিখুন" onchange="updateReading(\'' + t.id + '\')" /></div>';
+          html += '<div><label>ইউনিট</label><input type="number" value="' + bill.units + '" readonly /></div></div>';
+          html += '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:6px">' + bill.units + ' unit × ৳' + (t.unitRate||12) + ' = ৳' + bill.electricity + '</div>';
+        }
+        html += '<div class="btn-row">';
+        if (t.hasSubMeter) {
+          html += '<button class="btn btn-sm btn-accent" onclick="generateBillReceipt(\'' + t.id + '\')">🧾 বিল রসিদ</button>';
+          var billSmsSent = b.billSmsSent;
+          if (billSmsSent) {
+            html += '<button class="btn btn-sm btn-success" onclick="sendBillSms(\'' + t.id + '\',\'' + m + '\')">📱 বিল SMS Done · Resend</button>';
+          } else {
+            html += '<button class="btn btn-sm btn-accent" onclick="sendBillSms(\'' + t.id + '\',\'' + m + '\')">📱 বিল SMS পাঠান</button>';
+          }
+        }
+        if (totalDueAll > 0) html += '<button class="btn btn-sm btn-primary" onclick="markPaid(\'' + t.id + '\')">পেমেন্ট করুন</button>';
+        else html += '<button class="btn btn-sm btn-success" onclick="generatePaymentReceipt(\'' + t.id + '\')">💰 পেমেন্ট রসিদ</button>';
+        html += '</div>';
+        if (smsHtml) html += '<div class="btn-row" style="margin-top:6px">' + smsHtml + '</div>';
+        html += '</div>';
+      });
+      return html;
+    }
+
+    function updateReading(id) {
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      var val = document.getElementById('reading-'+id).value;
+      ensureMonthBills(state.currentMonth);
+      var b = state.bills[state.currentMonth][id];
+      if (val === '' || val === null) {
+        b.currentReading = null; b.units = 0;
+      } else {
+        b.currentReading = parseInt(val);
+        var prev = getPrevReading(t, state.currentMonth);
+        b.units = Math.max(0, b.currentReading - prev);
+      }
+      saveState(); render();
+    }
+    function getUnpaidMonths(tenantId) {
+      var t = state.tenants.find(function(x){ return x.id === tenantId; });
+      var months = [];
+      var keys = Object.keys(state.bills).sort();
+      if (keys.indexOf(state.currentMonth) < 0) keys.push(state.currentMonth);
+      keys.sort();
+      keys.forEach(function(mk) {
+        ensureMonthBills(mk);
+        var bill = calcBill(t, mk);
+        if (bill.due > 0) {
+          months.push({ month: mk, bill: bill });
+        }
+      });
+      if (!months.length) {
+        ensureMonthBills(state.currentMonth);
+        months.push({ month: state.currentMonth, bill: calcBill(t, state.currentMonth) });
+      }
+      return months;
+    }
+
+    function markPaid(id) {
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      var unpaid = getUnpaidMonths(id);
+      var totalAllDue = 0;
+      unpaid.forEach(function(u){ totalAllDue += u.bill.due; });
+
+      var html = '<div class="modal-header"><h2>পেমেন্ট — ' + t.name + '</h2><button class="close-btn" onclick="closeModal()">✕</button></div>';
+      html += '<p style="font-size:0.85rem;margin-bottom:8px">মোট বাকি (সব মাস): <strong style="color:var(--danger)">৳' + totalAllDue.toLocaleString() + '</strong></p>';
+
+      html += '<div class="section-title">কোন মাসের বিল? (নিজে সিলেক্ট করুন)</div>';
+      html += '<div id="pay-months-list">';
+      unpaid.forEach(function(u) {
+        html += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px;margin-bottom:8px">';
+        html += '<label style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:0.9rem;margin-bottom:0">';
+        html += '<input type="checkbox" class="pay-month-cb" data-month="' + u.month + '" data-due="' + u.bill.due + '" onchange="updatePayTotal()" style="width:auto;margin:0" />';
+        html += '<span>' + monthLabel(u.month) + ' — বাকি ৳' + u.bill.due.toLocaleString();
+        if (u.bill.paidAmount > 0) html += ' <small>(আগে ৳' + u.bill.paidAmount + ')</small>';
+        html += '</span></label>';
+        if (t.hasSubMeter) {
+          var pr = u.bill.prevReading || 0;
+          var cr = u.bill.currentReading !== null && u.bill.currentReading !== undefined ? u.bill.currentReading : '';
+          html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;font-size:0.78rem">';
+          html += '<div><label style="margin:0;font-size:0.68rem">Prev</label><input type="number" value="' + pr + '" readonly style="margin:0;padding:6px;font-size:0.85rem" /></div>';
+          html += '<div><label style="margin:0;font-size:0.68rem">নতুন রিডিং</label><input type="number" class="pay-reading" data-month="' + u.month + '" value="' + cr + '" placeholder="লিখুন" style="margin:0;padding:6px;font-size:0.85rem" onchange="savePayReading(\'' + id + '\',this)" /></div>';
+          html += '<div><label style="margin:0;font-size:0.68rem">ইউনিট</label><input type="number" value="' + (u.bill.units||0) + '" readonly style="margin:0;padding:6px;font-size:0.85rem" id="pay-units-' + u.month + '" /></div>';
+          html += '</div>';
+          html += '<div style="font-size:0.75rem;color:var(--muted);margin-top:4px">সাব ৳' + (u.bill.electricity||0) + ' · মোট ৳' + u.bill.total + '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+      if (unpaid.length > 1) {
+        html += '<button class="btn btn-sm btn-accent" style="margin-bottom:12px" onclick="selectAllDueMonths()">📋 সব Due মাস সিলেক্ট</button>';
+      }
+
+      html += '<label>এখন পরিশোধ করছে (৳)</label>';
+      html += '<input id="pay-amount" type="number" value="0" />';
+
+      html += '<div class="section-title">পেমেন্ট মাধ্যম</div>';
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">';
+      html += '<label style="display:flex;align-items:center;gap:4px;font-size:0.85rem"><input type="radio" name="pay-method" value="নগদ" checked onchange="toggleMfs()" style="width:auto;margin:0" /> নগদ</label>';
+      html += '<label style="display:flex;align-items:center;gap:4px;font-size:0.85rem"><input type="radio" name="pay-method" value="MFS" onchange="toggleMfs()" style="width:auto;margin:0" /> MFS</label>';
+      html += '<label style="display:flex;align-items:center;gap:4px;font-size:0.85rem"><input type="radio" name="pay-method" value="ব্যাংক একাউন্ট" onchange="toggleMfs()" style="width:auto;margin:0" /> ব্যাংক একাউন্ট</label>';
+      html += '</div>';
+      html += '<div id="mfs-options" class="hidden" style="margin-bottom:10px">';
+      html += '<label style="display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-bottom:6px"><input type="radio" name="mfs-type" value="বিকাশ" checked style="width:auto;margin:0" /> বিকাশ</label>';
+      html += '<label style="display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-bottom:6px"><input type="radio" name="mfs-type" value="রকেট" style="width:auto;margin:0" /> রকেট</label>';
+      html += '<label style="display:flex;align-items:center;gap:4px;font-size:0.85rem"><input type="radio" name="mfs-type" value="নগদ" style="width:auto;margin:0" /> নগদ (MFS)</label>';
+      html += '</div>';
+
+      html += '<label>তারিখ</label><input id="pay-date" type="date" value="' + new Date().toISOString().slice(0,10) + '" />';
+      html += '<label>নোট (ঐচ্ছিক)</label><input id="pay-note" placeholder="অতিরিক্ত নোট" />';
+      html += '<button class="btn btn-primary" onclick="confirmPaid(\'' + id + '\')">নিশ্চিত করুন</button>';
+      openModal(html);
+      window._payTenantId = id;
+    }
+
+    function savePayReading(tenantId, input) {
+      var mk = input.getAttribute('data-month');
+      var val = input.value;
+      var t = state.tenants.find(function(x){ return x.id === tenantId; });
+      ensureMonthBills(mk);
+      var b = state.bills[mk][tenantId];
+      if (val === '' || val === null) {
+        b.currentReading = null;
+        b.units = 0;
+      } else {
+        b.currentReading = parseInt(val);
+        var prev = getPrevReading(t, mk);
+        b.units = Math.max(0, b.currentReading - prev);
+      }
+      saveState();
+      // refresh due on checkbox
+      var bill = calcBill(t, mk);
+      var cb = document.querySelector('.pay-month-cb[data-month="' + mk + '"]');
+      if (cb) cb.setAttribute('data-due', bill.due);
+      var unitsEl = document.getElementById('pay-units-' + mk);
+      if (unitsEl) unitsEl.value = bill.units;
+      updatePayTotal();
+      toast('রিডিং সেভ · ইউনিট ' + bill.units + ' · সাব ৳' + bill.electricity);
+    }
+
+    function selectAllDueMonths() {
+      document.querySelectorAll('.pay-month-cb').forEach(function(cb){ cb.checked = true; });
+      updatePayTotal();
+    }
+
+    function toggleMfs() {
+      var mfs = document.querySelector('input[name="pay-method"]:checked');
+      var box = document.getElementById('mfs-options');
+      if (box) box.classList.toggle('hidden', !(mfs && mfs.value === 'MFS'));
+    }
+
+    function updatePayTotal() {
+      var cbs = document.querySelectorAll('.pay-month-cb:checked');
+      var sum = 0;
+      cbs.forEach(function(cb){ sum += parseInt(cb.getAttribute('data-due')) || 0; });
+      var inp = document.getElementById('pay-amount');
+      if (inp) inp.value = sum;
+    }
+
+    function getSelectedPayMethod() {
+      var m = document.querySelector('input[name="pay-method"]:checked');
+      if (!m) return 'নগদ';
+      if (m.value === 'MFS') {
+        var mt = document.querySelector('input[name="mfs-type"]:checked');
+        return 'MFS (' + (mt ? mt.value : 'বিকাশ') + ')';
+      }
+      return m.value;
+    }
+
+    function buildSmsMessage(tenant, paymentsInfo, totalPaid, totalDueAfter, payMethod) {
+      var L = state.landlord || { name: 'মোঃ জয়নাল আবেদিন', address: 'আনন্দ নগর, মেরুল বাড্ডা', phone: '01313046961' };
+      var now = new Date();
+      var dateStr = now.toLocaleDateString('bn-BD');
+      var lines = [];
+      lines.push(tenant.name + ' | ' + floorText(tenant));
+      lines.push(L.name + ', ' + L.address);
+      paymentsInfo.forEach(function(pi) {
+        var bill = calcBill(tenant, pi.month);
+        var rentLabel = monthLabel(pi.month);
+        var utilLabel = utilMonthLabel(pi.month);
+        var parts = [];
+        parts.push('ভাড়া(' + rentLabel + ') ' + bill.rent);
+        if (bill.water) parts.push('পানি(' + utilLabel + ') ' + bill.water);
+        if (bill.lineGas) parts.push('গ্যাস(' + utilLabel + ') ' + bill.lineGas);
+        if (bill.extras && bill.extras.length) {
+          bill.extras.forEach(function(ex) {
+            parts.push(ex.name + '(' + utilLabel + ') ' + ex.amount);
+          });
+        }
+        if (tenant.hasSubMeter) {
+          var cr = (bill.currentReading !== null && bill.currentReading !== undefined) ? bill.currentReading : '-';
+          var pr = bill.prevReading || 0;
+          parts.push('সাব(' + utilLabel + ') Prev ' + pr);
+          parts.push('রিডিং ' + cr);
+          parts.push('ইউনিট ' + (bill.units || 0));
+          parts.push('৳' + (bill.electricity || 0));
+        }
+        parts.push('মোট ৳' + bill.total);
+        if (pi.paidThis) parts.push('পেইড ' + pi.paidThis);
+        lines.push(parts.join(', '));
+      });
+      var tail = 'পরিশোধ ' + totalPaid;
+      if (payMethod) tail += ' (' + payMethod + ')';
+      tail += ' | ' + dateStr;
+      lines.push(tail);
+      return lines.join('\n');
+    }
+
+    function buildBillSms(tenant, monthKey) {
+      var L = state.landlord || { name: 'মোঃ জয়নাল আবেদিন', address: 'আনন্দ নগর, মেরুল বাড্ডা', phone: '01313046961' };
+      var bill = calcBill(tenant, monthKey);
+      var rentLabel = monthLabel(monthKey);
+      var utilLabel = utilMonthLabel(monthKey);
+      var parts = [];
+      parts.push(tenant.name + ' | ' + floorText(tenant));
+      parts.push(L.name + ', ' + L.address);
+      parts.push(rentLabel + ' বিল');
+      var items = ['ভাড়া(' + rentLabel + ') ' + bill.rent];
+      if (bill.water) items.push('পানি(' + utilLabel + ') ' + bill.water);
+      if (bill.lineGas) items.push('গ্যাস(' + utilLabel + ') ' + bill.lineGas);
+      if (bill.extras && bill.extras.length) {
+        bill.extras.forEach(function(ex) {
+          items.push(ex.name + '(' + utilLabel + ') ' + ex.amount);
+        });
+      }
+      if (tenant.hasSubMeter) {
+        var cr = (bill.currentReading !== null && bill.currentReading !== undefined) ? bill.currentReading : '-';
+        var pr = bill.prevReading || 0;
+        items.push('সাব(' + utilLabel + ') Prev ' + pr);
+        items.push('রিডিং ' + cr);
+        items.push('ইউনিট ' + (bill.units || 0));
+        items.push('৳' + (bill.electricity || 0));
+      }
+      items.push('মোট ৳' + bill.total);
+      parts.push(items.join(', '));
+      return parts.join('\n');
+    }
+
+    function sendBillSms(tenantId, monthKey) {
+      var t = state.tenants.find(function(x){ return x.id === tenantId; });
+      if (!t) return;
+      ensureMonthBills(monthKey);
+      var msg = buildBillSms(t, monthKey);
+      var b = state.bills[monthKey][tenantId];
+      b.billSmsText = msg;
+      saveState();
+      window._lastSms = msg;
+      window._lastPaidMonths = [monthKey];
+      window._billSmsMode = true;
+      showBillSmsModal(tenantId, msg, monthKey);
+    }
+
+    function showBillSmsModal(tenantId, msg, monthKey) {
+      var t = state.tenants.find(function(x){ return x.id === tenantId; });
+      var phone = (t.mobile || '').replace(/[^0-9]/g, '');
+      var html = '<div class="modal-header"><h2>📱 বিল SMS</h2><button class="close-btn" onclick="closeModal()">✕</button></div>';
+      html += '<p style="font-size:0.85rem;color:var(--muted);margin-bottom:8px">সাব-মিটার বিল রসিদ — ছোট SMS</p>';
+      html += '<div class="sms-box" id="sms-text"></div>';
+      html += '<div class="btn-row">';
+      if (phone) {
+        html += '<button class="btn btn-sm btn-primary" id="btn-send-sms">📱 SMS পাঠান</button>';
+      } else {
+        html += '<span style="font-size:0.8rem;color:var(--danger)">মোবাইল নম্বর নেই — এডিট করে দিন</span>';
+      }
+      html += '<button class="btn btn-sm btn-accent" id="btn-copy-sms">📋 কপি</button>';
+      html += '</div>';
+      openModal(html);
+      document.getElementById('sms-text').textContent = msg;
+      window._lastSms = msg;
+      var bs = document.getElementById('btn-send-sms');
+      if (bs) bs.onclick = function(){
+        sendSmsTo(phone);
+        ensureMonthBills(monthKey);
+        state.bills[monthKey][tenantId].billSmsSent = true;
+        state.bills[monthKey][tenantId].billSmsText = msg;
+        saveState();
+        toast('SMS পাঠানো হয়েছে');
+      };
+      document.getElementById('btn-copy-sms').onclick = function(){ copySms(); };
+    }
+
+    function showSmsAfterPayment(tenantId, smsMsg) {
+      var t = state.tenants.find(function(x){ return x.id === tenantId; });
+      var msg = smsMsg || window._lastSms || '';
+      var phone = (t.mobile || '').replace(/[^0-9]/g, '');
+      var html = '<div class="modal-header"><h2>✅ পেমেন্ট সফল · SMS</h2><button class="close-btn" onclick="closeModal()">✕</button></div>';
+      html += '<p style="font-size:0.85rem;color:var(--muted);margin-bottom:8px">নিচের মেসেজটি ভাড়াটিয়াকে পাঠান।</p>';
+      html += '<div class="sms-box" id="sms-text"></div>';
+      html += '<div class="btn-row">';
+      if (phone) {
+        html += '<button class="btn btn-sm btn-primary" id="btn-send-sms">📱 SMS পাঠান</button>';
+      } else {
+        html += '<span style="font-size:0.8rem;color:var(--danger)">ভাড়াটিয়ার মোবাইল নম্বর নেই</span>';
+      }
+      html += '<button class="btn btn-sm btn-accent" id="btn-copy-sms">📋 কপি</button>';
+      html += '</div>';
+      openModal(html);
+      document.getElementById('sms-text').textContent = msg;
+      window._lastSms = msg;
+      window._lastSmsPhone = phone;
+      window._lastSmsTenantId = tenantId;
+      var bs = document.getElementById('btn-send-sms');
+      if (bs) bs.onclick = function(){ sendSmsTo(phone); markSmsSent(tenantId); };
+      document.getElementById('btn-copy-sms').onclick = function(){ copySms(); };
+    }
+
+    function markSmsSent(tenantId) {
+      // mark smsSent on the months that were just paid - stored in window._lastPaidMonths
+      var months = window._lastPaidMonths || [state.currentMonth];
+      months.forEach(function(mk) {
+        ensureMonthBills(mk);
+        if (state.bills[mk][tenantId]) {
+          state.bills[mk][tenantId].smsSent = true;
+          state.bills[mk][tenantId].smsText = window._lastSms || '';
+        }
+      });
+      saveState();
+    }
+
+    function resendSms(tenantId, monthKey) {
+      ensureMonthBills(monthKey);
+      var b = state.bills[monthKey][tenantId];
+      var t = state.tenants.find(function(x){ return x.id === tenantId; });
+      var msg = (b && b.smsText) ? b.smsText : '';
+      if (!msg) {
+        // rebuild simple for this month
+        var bill = calcBill(t, monthKey);
+        msg = buildSmsMessage(t, [{month: monthKey, bill: bill, paidThis: bill.paidAmount}], bill.paidAmount, bill.due);
+      }
+      window._lastSms = msg;
+      window._lastPaidMonths = [monthKey];
+      showSmsAfterPayment(tenantId, msg);
+    }
+
+    function sendSmsTo(phone) {
+      var msg = window._lastSms || '';
+      var uri = 'sms:' + phone + '?body=' + encodeURIComponent(msg);
+      window.location.href = uri;
+      toast('SMS অ্যাপ খুলছে...');
+    }
+
+    function copySms() {
+      var msg = window._lastSms || '';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(msg).then(function(){ toast('মেসেজ কপি হয়েছে ✓'); });
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = msg;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        toast('মেসেজ কপি হয়েছে ✓');
+      }
+    }
+
+    function confirmPaid(id) {
+      var amount = parseInt(document.getElementById('pay-amount').value) || 0;
+      if (amount <= 0) return toast('পরিমাণ দিন');
+      var date = document.getElementById('pay-date').value;
+      var note = document.getElementById('pay-note').value;
+      var payMethod = getSelectedPayMethod();
+      var cbs = document.querySelectorAll('.pay-month-cb:checked');
+      if (!cbs.length) return toast('কমপক্ষে এক মাস সিলেক্ট করুন');
+
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      var selectedMonths = [];
+      cbs.forEach(function(cb){ selectedMonths.push(cb.getAttribute('data-month')); });
+      selectedMonths.sort();
+
+      var remaining = amount;
+      var paymentsInfo = [];
+      var paidMonths = [];
+
+      selectedMonths.forEach(function(mk) {
+        ensureMonthBills(mk);
+        var b = state.bills[mk][id];
+        var billBefore = calcBill(t, mk);
+        var due = billBefore.due;
+        var payThis = Math.min(remaining, due);
+        if (payThis > 0 || due === 0) {
+          b.paidAmount = (b.paidAmount || 0) + payThis;
+          b.paidDate = date;
+          b.note = note;
+          b.payMethod = payMethod;
+          remaining -= payThis;
+          // keep meter/units from before payment for SMS
+          var billAfter = calcBill(t, mk);
+          billAfter.currentReading = billBefore.currentReading;
+          billAfter.prevReading = billBefore.prevReading;
+          billAfter.units = billBefore.units;
+          billAfter.electricity = billBefore.electricity;
+          billAfter.rent = billBefore.rent;
+          billAfter.water = billBefore.water;
+          billAfter.lineGas = billBefore.lineGas;
+          billAfter.total = billBefore.total;
+          paymentsInfo.push({ month: mk, bill: billAfter, paidThis: payThis });
+          paidMonths.push(mk);
+        }
+      });
+
+      if (remaining > 0 && paidMonths.length) {
+        var lastMk = paidMonths[paidMonths.length - 1];
+        state.bills[lastMk][id].paidAmount += remaining;
+        paymentsInfo[paymentsInfo.length - 1].paidThis += remaining;
+        paymentsInfo[paymentsInfo.length - 1].bill = calcBill(t, lastMk);
+        remaining = 0;
+      }
+
+      var totalDueAfter = getTotalDue(t);
+      var smsMsg = buildSmsMessage(t, paymentsInfo, amount, totalDueAfter, payMethod);
+
+      var monthAmounts = {};
+      paymentsInfo.forEach(function(pi){ monthAmounts[pi.month] = pi.paidThis; });
+      state.payments.unshift({
+        id: 'p' + Date.now(),
+        tenantId: id,
+        tenantName: t.name,
+        month: paidMonths.join(','),
+        months: paidMonths.slice(),
+        monthAmounts: monthAmounts,
+        amount: amount,
+        date: date,
+        note: note,
+        payMethod: payMethod,
+        totalBill: paymentsInfo.reduce(function(s, p){ return s + p.bill.total; }, 0),
+        remainingDue: totalDueAfter,
+        smsText: smsMsg
+      });
+
+      paidMonths.forEach(function(mk) {
+        state.bills[mk][id].smsText = smsMsg;
+        state.bills[mk][id].smsSent = false;
+      });
+
+      window._lastSms = smsMsg;
+      window._lastPaidMonths = paidMonths.slice();
+      saveState();
+      toast('পেমেন্ট রেকর্ড হয়েছে ✓');
+      showSmsAfterPayment(id, smsMsg);
+    }
+
+    function receiptHeader(title, t, month) {
+      var h = '<h3>' + title + '</h3>';
+      h += '<div class="line"><span>নাম:</span><span>' + t.name + '</span></div>';
+      h += '<div class="line"><span>ফ্লোর:</span><span>' + floorText(t) + '</span></div>';
+      h += '<div class="line"><span>বিলের মাস:</span><span>' + monthLabel(month) + '</span></div>';
+      h += '<div class="line"><span>তারিখ:</span><span>' + new Date().toLocaleDateString('bn-BD') + '</span></div>';
+      h += '<hr style="margin:6px 0;border:none;border-top:1px dashed #d97706">';
+      return h;
+    }
+    function generateBillReceipt(id) {
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      var m = state.currentMonth;
+      var bill = calcBill(t, m);
+      var html = '<div class="modal-header"><h2>বিল রসিদ</h2><button class="close-btn" onclick="closeModal()">✕</button></div>';
+      html += '<div class="receipt" id="receipt-box">';
+      html += receiptHeader('🏠 বিল রসিদ (পেমেন্টের আগে)', t, m);
+      html += '<div class="line"><span>ভাড়া (' + monthLabel(m) + '):</span><span>৳' + bill.rent + '</span></div>';
+      html += '<div class="line"><span>পানি (' + utilMonthLabel(m) + '):</span><span>৳' + bill.water + '</span></div>';
+      if (bill.lineGas) html += '<div class="line"><span>গ্যাস (' + utilMonthLabel(m) + '):</span><span>৳' + bill.lineGas + '</span></div>';
+      if (bill.extras && bill.extras.length) {
+        bill.extras.forEach(function(ex) {
+          html += '<div class="line"><span>' + ex.name + ' (' + utilMonthLabel(m) + '):</span><span>৳' + ex.amount + '</span></div>';
+        });
+      }
+      if (t.hasSubMeter) {
+        html += '<div class="line"><span>Previous Reading:</span><span>' + bill.prevReading + '</span></div>';
+        html += '<div class="line"><span>Current Reading:</span><span>' + (bill.currentReading !== null ? bill.currentReading : '-') + '</span></div>';
+        html += '<div class="line"><span>ইউনিট (' + bill.units + ' × ৳' + (t.unitRate||12) + '):</span><span>৳' + bill.electricity + '</span></div>';
+      }
+      html += '<div class="line total-line"><span>মোট বিল:</span><span>৳' + bill.total.toLocaleString() + '</span></div>';
+      if (bill.paidAmount > 0) html += '<div class="line"><span>আগে পরিশোধ:</span><span>৳' + bill.paidAmount + '</span></div>';
+      if (bill.due > 0) html += '<div class="line due-line"><span>বাকি:</span><span>৳' + bill.due.toLocaleString() + '</span></div>';
+      html += '<p style="text-align:center;margin-top:10px;font-size:0.72rem;color:#92400e">পেমেন্টের আগের বিল রসিদ</p></div>';
+      html += '<div class="btn-row" style="margin-top:12px"><button class="btn btn-primary" onclick="window.print()">🖨️ প্রিন্ট</button><button class="btn btn-secondary" onclick="closeModal()">বন্ধ</button></div>';
+      openModal(html);
+    }
+    function generatePaymentReceipt(id) {
+      var t = state.tenants.find(function(x){ return x.id === id; });
+      // Only months from last payment selection, else current month only
+      var months = (window._lastPaidMonths && window._lastPaidMonths.length)
+        ? window._lastPaidMonths.slice()
+        : [state.currentMonth];
+      var html = '<div class="modal-header"><h2>পেমেন্ট রসিদ</h2><button class="close-btn" onclick="closeModal()">✕</button></div>';
+      html += '<div class="receipt" id="receipt-box">';
+      html += '<h3>🏠 পেমেন্ট রসিদ</h3>';
+      html += '<div class="line"><span>নাম:</span><span>' + t.name + '</span></div>';
+      html += '<div class="line"><span>ফ্লোর:</span><span>' + floorText(t) + '</span></div>';
+      html += '<div class="line"><span>তারিখ:</span><span>' + new Date().toLocaleDateString('bn-BD') + '</span></div>';
+      html += '<hr style="margin:6px 0;border:none;border-top:1px dashed #d97706">';
+
+      var sumTotal = 0, sumPaid = 0, sumDue = 0;
+      months.forEach(function(mk) {
+        var bill = calcBill(t, mk);
+        sumTotal += bill.total;
+        sumPaid += bill.paidAmount;
+        sumDue += bill.due;
+        html += '<div style="margin:8px 0 4px;font-weight:700">' + monthLabel(mk) + '</div>';
+        html += '<div class="line"><span>ভাড়া (' + monthLabel(mk) + '):</span><span>৳' + bill.rent + '</span></div>';
+        html += '<div class="line"><span>পানি (' + utilMonthLabel(mk) + '):</span><span>৳' + bill.water + '</span></div>';
+        if (bill.lineGas) html += '<div class="line"><span>গ্যাস (' + utilMonthLabel(mk) + '):</span><span>৳' + bill.lineGas + '</span></div>';
+        if (bill.extras && bill.extras.length) {
+          bill.extras.forEach(function(ex) {
+            html += '<div class="line"><span>' + ex.name + ' (' + utilMonthLabel(mk) + '):</span><span>৳' + ex.amount + '</span></div>';
+          });
+        }
+        if (t.hasSubMeter) {
+          html += '<div class="line"><span>Prev / রিডিং:</span><span>' + (bill.prevReading||0) + ' / ' + (bill.currentReading !== null ? bill.currentReading : '-') + '</span></div>';
+          html += '<div class="line"><span>সাব-মিটার (' + bill.units + 'u):</span><span>৳' + bill.electricity + '</span></div>';
+        }
+        html += '<div class="line"><span>মোট:</span><span>৳' + bill.total.toLocaleString() + '</span></div>';
+        html += '<div class="line"><span>পরিশোধিত:</span><span>৳' + bill.paidAmount.toLocaleString() + '</span></div>';
+        if (bill.due > 0) {
+          html += '<div class="line due-line"><span>বাকি (' + monthLabel(mk) + '):</span><span>৳' + bill.due.toLocaleString() + '</span></div>';
+        } else {
+          html += '<div class="line" style="color:var(--success)"><span>স্ট্যাটাস:</span><span>পরিশোধিত ✓</span></div>';
+        }
+      });
+
+      html += '<div class="line total-line"><span>মোট বিল:</span><span>৳' + sumTotal.toLocaleString() + '</span></div>';
+      html += '<div class="line"><span>মোট পরিশোধ:</span><span>৳' + sumPaid.toLocaleString() + '</span></div>';
+      // Only show due for the selected months — NOT all months total
+      if (sumDue > 0) {
+        html += '<div class="line due-line"><span>বাকি (সিলেক্টেড মাস):</span><span>৳' + sumDue.toLocaleString() + '</span></div>';
+      }
+      html += '<p style="text-align:center;margin-top:10px;font-size:0.72rem;color:#92400e">ধন্যবাদ</p></div>';
+      html += '<div class="btn-row" style="margin-top:12px"><button class="btn btn-primary" onclick="window.print()">🖨️ প্রিন্ট</button><button class="btn btn-secondary" onclick="closeModal()">বন্ধ</button></div>';
+      openModal(html);
+    }
+
+    function bulkBillReceipts() {
+      var m = state.currentMonth;
+      ensureMonthBills(m);
+      var tenants = activeTenants();
+      var html = '<div class="modal-header"><h2>সব বিল রসিদ — ' + monthLabel(m) + '</h2><button class="close-btn" onclick="closeModal()">✕</button></div><div id="receipt-box">';
+      tenants.forEach(function(t, i) {
+        var bill = calcBill(t, m);
+        html += '<div class="receipt" style="margin-bottom:16px;page-break-inside:avoid">';
+        html += receiptHeader('🏠 বিল রসিদ', t, m);
+        html += '<div class="line"><span>ভাড়া:</span><span>৳' + bill.rent + '</span></div>';
+        html += '<div class="line"><span>পানি:</span><span>৳' + bill.water + '</span></div>';
+        if (bill.lineGas) html += '<div class="line"><span>লাইন গ্যাস:</span><span>৳' + bill.lineGas + '</span></div>';
+        if (t.hasSubMeter) {
+          html += '<div class="line"><span>Prev → Curr:</span><span>' + bill.prevReading + ' → ' + (bill.currentReading !== null ? bill.currentReading : '-') + '</span></div>';
+          html += '<div class="line"><span>সাব-মিটার (' + bill.units + 'u × ৳' + (t.unitRate||12) + '):</span><span>৳' + bill.electricity + '</span></div>';
+        }
+        html += '<div class="line total-line"><span>মোট:</span><span>৳' + bill.total.toLocaleString() + '</span></div>';
+        if (bill.due > 0) html += '<div class="line due-line"><span>বাকি:</span><span>৳' + bill.due + '</span></div>';
+        else html += '<div class="line" style="color:var(--success)"><span>স্ট্যাটাস:</span><span>পরিশোধিত</span></div>';
+        html += '</div>';
+        if (i < tenants.length-1) html += '<hr style="border:none;border-top:2px dashed #ccc;margin:12px 0">';
+      });
+      html += '</div><div class="btn-row" style="margin-top:12px"><button class="btn btn-primary" onclick="window.print()">🖨️ সব প্রিন্ট</button><button class="btn btn-secondary" onclick="closeModal()">বন্ধ</button></div>';
+      openModal(html);
+    }
+    function bulkPaymentReceipts() {
+      var m = state.currentMonth;
+      ensureMonthBills(m);
+      var tenants = activeTenants();
+      var html = '<div class="modal-header"><h2>সব পেমেন্ট রসিদ — ' + monthLabel(m) + '</h2><button class="close-btn" onclick="closeModal()">✕</button></div><div id="receipt-box">';
+      tenants.forEach(function(t, i) {
+        var bill = calcBill(t, m);
+        html += '<div class="receipt" style="margin-bottom:16px;page-break-inside:avoid">';
+        html += receiptHeader('🏠 পেমেন্ট রসিদ', t, m);
+        html += '<div class="line"><span>মোট বিল:</span><span>৳' + bill.total.toLocaleString() + '</span></div>';
+        html += '<div class="line"><span>পরিশোধিত:</span><span>৳' + bill.paidAmount.toLocaleString() + '</span></div>';
+        if (bill.due > 0) {
+          html += '<div class="line due-line"><span>বাকি (' + monthLabel(m) + '):</span><span>৳' + bill.due + '</span></div>';
+        } else {
+          html += '<div class="line" style="color:var(--success)"><span>এই মাস:</span><span>পরিশোধিত ✓</span></div>';
+        }
+        html += '</div>';
+        if (i < tenants.length-1) html += '<hr style="border:none;border-top:2px dashed #ccc;margin:12px 0">';
+      });
+      html += '</div><div class="btn-row" style="margin-top:12px"><button class="btn btn-primary" onclick="window.print()">🖨️ সব প্রিন্ট</button><button class="btn btn-secondary" onclick="closeModal()">বন্ধ</button></div>';
+      openModal(html);
+    }
+
+    function renderPayments() {
+      var filterYear = window._histYear || '';
+      var filterMonth = window._histMonth || '';
+      var filterTenant = window._histTenant || '';
+
+      var years = {};
+      state.payments.forEach(function(p) {
+        var months = p.months || (p.month ? String(p.month).split(',') : []);
+        months.forEach(function(mk) {
+          if (mk && mk.indexOf('-') > 0) years[mk.split('-')[0]] = true;
+        });
+        if (p.date) years[p.date.slice(0,4)] = true;
+      });
+      var yearList = Object.keys(years).sort().reverse();
+
+      var html = '<div class="section-title">💰 পেমেন্ট হিস্ট্রি</div>';
+      html += '<div class="card" style="padding:12px">';
+      html += '<label>বছর</label><select id="hist-year" onchange="filterHistory()"><option value="">সব</option>';
+      yearList.forEach(function(y) {
+        html += '<option value="' + y + '"' + (filterYear===y?' selected':'') + '>' + y + '</option>';
+      });
+      html += '</select>';
+      html += '<label>মাস</label><select id="hist-month" onchange="filterHistory()"><option value="">সব</option>';
+      var monthNames = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+      var monthBn = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+      monthNames.forEach(function(mn, i) {
+        html += '<option value="' + mn + '"' + (filterMonth===mn?' selected':'') + '>' + monthBn[i] + '</option>';
+      });
+      html += '</select>';
+      html += '<label>ভাড়াটিয়া</label><select id="hist-tenant" onchange="filterHistory()"><option value="">সব</option>';
+      state.tenants.forEach(function(t) {
+        html += '<option value="' + t.id + '"' + (filterTenant===t.id?' selected':'') + '>' + t.name + '</option>';
+      });
+      html += '</select></div>';
+
+      var filtered = state.payments.filter(function(p) {
+        if (filterTenant && p.tenantId !== filterTenant) return false;
+        var months = p.months || (p.month ? String(p.month).split(',') : []);
+        if (filterYear) {
+          var ok = months.some(function(mk){ return mk && mk.indexOf(filterYear) === 0; }) || (p.date && p.date.indexOf(filterYear) === 0);
+          if (!ok) return false;
+        }
+        if (filterMonth) {
+          var ok2 = months.some(function(mk){ return mk && mk.split('-')[1] === filterMonth; });
+          if (!ok2 && !(p.date && p.date.slice(5,7) === filterMonth)) return false;
+        }
+        return true;
+      });
+
+      if (!filtered.length) {
+        html += '<div class="empty-state">কোনো পেমেন্ট নেই</div>';
+        return html;
+      }
+
+      filtered.forEach(function(p) {
+        var idx = state.payments.indexOf(p);
+        html += '<div class="card"><div class="tenant-header"><div><div class="tenant-name">' + p.tenantName + '</div>';
+        var monthShow = p.months ? p.months.map(function(m){ return monthLabel(m); }).join(', ') : monthLabel(p.month);
+        html += '<div style="font-size:0.72rem;color:var(--muted)">' + monthShow + ' · ' + p.date + '</div></div>';
+        html += '<span class="floor-badge paid">৳' + p.amount + '</span></div>';
+        if (p.payMethod) html += '<div style="font-size:0.8rem;margin-top:4px"><span class="chip">' + p.payMethod + '</span></div>';
+        if (p.note) html += '<div style="font-size:0.8rem;color:var(--muted);margin-top:4px">' + p.note + '</div>';
+        if (p.remainingDue > 0) html += '<div style="font-size:0.78rem;color:var(--danger);margin-top:2px">বাকি ছিল ৳' + p.remainingDue + '</div>';
+        html += '<div class="btn-row">';
+        html += '<button class="btn btn-sm btn-secondary" onclick="editPayment(' + idx + ')">✏️ এডিট</button>';
+        html += '<button class="btn btn-sm btn-danger" onclick="deletePayment(' + idx + ')">🗑️ ডিলিট</button>';
+        if (p.smsText) html += '<button class="btn btn-sm btn-accent" onclick="resendPaymentSms(' + idx + ')">📱 SMS</button>';
+        html += '</div></div>';
+      });
+      return html;
+    }
+
+    function filterHistory() {
+      var y = document.getElementById('hist-year');
+      var m = document.getElementById('hist-month');
+      var t = document.getElementById('hist-tenant');
+      window._histYear = y ? y.value : '';
+      window._histMonth = m ? m.value : '';
+      window._histTenant = t ? t.value : '';
+      render();
+    }
+
+    function editPayment(idx) {
+      var p = state.payments[idx];
+      if (!p) return;
+      var html = '<div class="modal-header"><h2>পেমেন্ট এডিট</h2><button class="close-btn" onclick="closeModal()">✕</button></div>';
+      html += '<label>পরিমাণ (৳)</label><input id="ep-amount" type="number" value="' + p.amount + '" />';
+      html += '<label>তারিখ</label><input id="ep-date" type="date" value="' + (p.date||'') + '" />';
+      html += '<label>নোট</label><input id="ep-note" value="' + (p.note||'') + '" />';
+      html += '<button class="btn btn-primary" onclick="savePaymentEdit(' + idx + ')">সেভ</button>';
+      openModal(html);
+    }
+
+    function savePaymentEdit(idx) {
+      var p = state.payments[idx];
+      var newAmt = parseInt(document.getElementById('ep-amount').value) || 0;
+      var oldAmt = p.amount;
+      var diff = newAmt - oldAmt;
+      p.amount = newAmt;
+      p.date = document.getElementById('ep-date').value;
+      p.note = document.getElementById('ep-note').value;
+      // adjust bill paidAmount on related months
+      var months = p.months || (p.month ? p.month.split(',') : []);
+      if (months.length && diff !== 0) {
+        var mk = months[months.length - 1];
+        ensureMonthBills(mk);
+        if (state.bills[mk][p.tenantId]) {
+          state.bills[mk][p.tenantId].paidAmount = Math.max(0, (state.bills[mk][p.tenantId].paidAmount || 0) + diff);
+        }
+      }
+      saveState();
+      toast('পেমেন্ট আপডেট হয়েছে');
+      closeModal();
+      render();
+    }
+
+    function deletePayment(idx) {
+      if (!confirm('এই পেমেন্ট ডিলিট করবেন? বিলের paid amount কমে যাবে।')) return;
+      var p = state.payments[idx];
+      if (p.monthAmounts) {
+        Object.keys(p.monthAmounts).forEach(function(mk) {
+          if (state.bills[mk] && state.bills[mk][p.tenantId]) {
+            state.bills[mk][p.tenantId].paidAmount = Math.max(0, (state.bills[mk][p.tenantId].paidAmount || 0) - (p.monthAmounts[mk] || 0));
+          }
+        });
+      } else {
+        var months = p.months || (p.month ? String(p.month).split(',') : []);
+        var mk = months[months.length - 1];
+        if (mk && state.bills[mk] && state.bills[mk][p.tenantId]) {
+          state.bills[mk][p.tenantId].paidAmount = Math.max(0, (state.bills[mk][p.tenantId].paidAmount || 0) - p.amount);
+        }
+      }
+      state.payments.splice(idx, 1);
+      saveState();
+      toast('পেমেন্ট ডিলিট হয়েছে');
+      render();
+    }
+
+    function resendPaymentSms(idx) {
+      var p = state.payments[idx];
+      if (!p || !p.smsText) return toast('SMS টেক্সট নেই');
+      window._lastSms = p.smsText;
+      window._lastPaidMonths = p.months || [p.month];
+      showSmsAfterPayment(p.tenantId, p.smsText);
+    }
+
+    function renderSettings() {
+      var L = state.landlord || { name: 'মোঃ জয়নাল আবেদিন', address: 'আনন্দ নগর, মেরুল বাড্ডা', phone: '01313046961' };
+      var D = getDriveConfig();
+      var connected = !!_driveAccessToken;
+      var html = '<div class="card"><div class="section-title">☁️ Google Drive সিঙ্ক</div>';
+      html += '<p style="font-size:0.8rem;color:var(--muted);margin-bottom:10px">আপনার Drive-এ আগে থেকে থাকা <strong>Rent app</strong> ফোল্ডারেই ডাটা রাখা হবে (ফাইল: bari-bhara-data.json)। একবার সাইন-ইন করলে অ্যাপ খোলার সময় আবার নিজে থেকেই কানেক্ট হয়ে যাবে।</p>';
+      html += '<label>OAuth Client ID</label>';
+      html += '<input id="drive-client-id" value="' + (D.clientId||'') + '" placeholder="xxxx.apps.googleusercontent.com" />';
+      html += '<label>Drive ফোল্ডার নাম</label>';
+      html += '<input id="drive-folder" value="' + (D.folderName||'Rent app') + '" />';
+      html += '<button class="btn btn-sm btn-secondary" style="margin-bottom:10px" onclick="saveDriveSettings()">💾 সেটিংস সেভ</button>';
+      if (!connected) {
+        html += '<button class="btn btn-primary" onclick="driveSignIn()">🔐 Google দিয়ে সাইন-ইন</button>';
+      } else {
+        html += '<p style="font-size:0.82rem;color:var(--success);margin-bottom:8px">✓ কানেক্টেড</p>';
+        html += '<p style="font-size:0.78rem;color:var(--success);margin-bottom:6px">🔄 অটো-সিঙ্ক চালু — যেকোনো পরিবর্তন এখন থেকে Drive-এ নিজে থেকেই সেভ হবে</p>';
+        if (D.lastSync) html += '<p id="drive-last-sync-wrap" style="font-size:0.75rem;color:var(--muted)">লাস্ট সিঙ্ক: <span id="drive-last-sync-text">' + new Date(D.lastSync).toLocaleString() + '</span></p>';
+        html += '<div class="btn-row">';
+        html += '<button class="btn btn-sm btn-primary" onclick="driveUpload()">⬆️ Drive এ আপলোড</button>';
+        html += '<button class="btn btn-sm btn-success" onclick="driveDownload()">⬇️ Drive থেকে লোড</button>';
+        html += '<button class="btn btn-sm btn-danger" onclick="driveSignOut()">সাইন আউট</button>';
+        html += '</div>';
+      }
+      html += '<p style="font-size:0.75rem;color:var(--muted);margin-top:10px">সেটআপ: Google Cloud Console → OAuth Client ID বানিয়ে এখানে পেস্ট করুন। প্রথমবার সাইন-ইন করলে Google একটা "unverified app" সতর্কতা দেখাবে — এটা স্বাভাবিক, কারণ এটা শুধু আপনার নিজের জন্য বানানো অ্যাপ। "Advanced" চেপে এগিয়ে যান।</p>';
+      html += '</div>';
+      html += '<div class="card"><div class="section-title">👤 বাড়িওয়ালার তথ্য (SMS এ যাবে)</div>';
+      html += '<label>নাম</label><input id="ll-name" value="' + (L.name||'') + '" />';
+      html += '<label>ঠিকানা</label><input id="ll-address" value="' + (L.address||'') + '" />';
+      html += '<label>মোবাইল নম্বর (আপনার)</label><input id="ll-phone" value="' + (L.phone||'') + '" placeholder="01313046961" />';
+      html += '<button class="btn btn-primary" onclick="saveLandlord()">💾 সেভ করুন</button></div>';
+      html += '<div class="card"><div class="section-title">📦 ব্যাকআপ ও রিস্টোর</div>';
+      html += '<p style="font-size:0.82rem;color:var(--muted);margin-bottom:10px">সব ডাটা JSON হিসেবে ডাউনলোড করুন। Google Drive এ রাখতে পারবেন।</p>';
+      html += '<button class="btn btn-primary" onclick="exportData()">⬇️ ব্যাকআপ ডাউনলোড</button>';
+      html += '<label style="margin-top:12px">রিস্টোর (JSON ফাইল)</label><input type="file" accept=".json" onchange="importData(this)" /></div>';
+      html += '<div class="card"><div class="section-title">🔄 রিসেট</div>';
+      html += '<p style="font-size:0.82rem;color:var(--muted);margin-bottom:8px">সব ডাটা মুছে ডিফল্ট ১১ জন দিয়ে শুরু।</p>';
+      html += '<button class="btn btn-danger" onclick="resetData()">রিসেট করুন</button></div>';
+      html += '<div class="card"><div class="section-title">ℹ️ কিভাবে কাজ করে</div>';
+      html += '<p style="font-size:0.82rem;line-height:1.6">• <strong>সাব-মিটার:</strong> নিশাদ, রাকিব, রুস্তম — Previous Reading সেট করুন।<br>';
+      html += '• <strong>SMS:</strong> পেমেন্ট হলে মেসেজ তৈরি হয়। “SMS পাঠান” চাপলে আপনার ফোনের SMS অ্যাপ খুলবে।<br>';
+      html += '• <strong>লাইন গ্যাস:</strong> শুধু যাদের আছে তাদের দেখায়।<br>';
+      html += '• <strong>বাল্ক প্রিন্ট:</strong> একসাথে সব রসিদ।</p></div>';
+      return html;
+    }
+
+    function saveLandlord() {
+      if (!state.landlord) state.landlord = {};
+      state.landlord.name = document.getElementById('ll-name').value.trim() || 'মোঃ জয়নাল আবেদিন';
+      state.landlord.address = document.getElementById('ll-address').value.trim() || 'আনন্দ নগর, মেরুল বাড্ডা';
+      state.landlord.phone = document.getElementById('ll-phone').value.trim() || '01313046961';
+      saveState();
+      toast('বাড়িওয়ালার তথ্য সেভ হয়েছে ✓');
+    }
+
+    
+    // ========== GOOGLE DRIVE SYNC ==========
+    var _gisTokenClient = null;
+    var _driveAccessToken = null;
+    var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
+    var DRIVE_FILE_NAME = 'bari-bhara-data.json';
+
+    function getDriveConfig() {
+      if (!state.drive) state.drive = { clientId: '', folderName: 'Rent app', fileId: null, lastSync: null };
+      return state.drive;
+    }
+
+    var _driveTokenExpiry = 0;
+    function initGoogleDrive(silent) {
+      var cfg = getDriveConfig();
+      if (!cfg.clientId || !cfg.clientId.trim()) {
+        if (!silent) toast('আগে Client ID সেট করুন (সেটিংস)');
+        return false;
+      }
+      if (typeof google === 'undefined' || !google.accounts) {
+        if (!silent) toast('Google লোড হয়নি — ইন্টারনেট চেক করুন');
+        return false;
+      }
+      _gisTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: cfg.clientId.trim(),
+        scope: DRIVE_SCOPE,
+        callback: function(resp) {
+          if (resp.error) {
+            if (!silent) toast('লগইন ব্যর্থ: ' + (resp.error || ''));
+            return;
+          }
+          _driveAccessToken = resp.access_token;
+          _driveTokenExpiry = Date.now() + ((resp.expires_in || 3500) * 1000);
+          if (!silent) toast('Google ড্রাইভ কানেক্টেড ✓');
+          scheduleTokenRefresh();
+          render();
+        }
+      });
+      return true;
+    }
+
+    function scheduleTokenRefresh() {
+      // silently refresh the token ~5 min before expiry so the app stays
+      // connected to Drive in the background without asking again
+      var msLeft = _driveTokenExpiry - Date.now() - (5 * 60 * 1000);
+      if (msLeft < 0) msLeft = 60 * 1000;
+      setTimeout(function() {
+        if (!_driveAccessToken) return;
+        if (!initGoogleDrive(true)) return;
+        _gisTokenClient.requestAccessToken({ prompt: '' });
+      }, msLeft);
+    }
+
+    function trySilentDriveSignIn() {
+      var cfg = getDriveConfig();
+      if (!cfg.clientId || !cfg.clientId.trim()) return;
+      var tries = 0;
+      var iv = setInterval(function() {
+        tries++;
+        if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+          clearInterval(iv);
+          if (!initGoogleDrive(true)) return;
+          _gisTokenClient.requestAccessToken({ prompt: '' });
+        } else if (tries > 40) {
+          clearInterval(iv);
+        }
+      }, 250);
+    }
+
+    function driveSignIn() {
+      if (!initGoogleDrive()) return;
+      _gisTokenClient.requestAccessToken({ prompt: 'consent' });
+    }
+
+    function driveSignOut() {
+      _driveAccessToken = null;
+      toast('ড্রাইভ ডিসকানেক্ট');
+      render();
+    }
+
+    function driveFetch(url, options) {
+      options = options || {};
+      options.headers = options.headers || {};
+      options.headers['Authorization'] = 'Bearer ' + _driveAccessToken;
+      return fetch(url, options).then(function(r) {
+        if (!r.ok) return r.text().then(function(t){ throw new Error(t || r.status); });
+        var ct = r.headers.get('content-type') || '';
+        if (ct.indexOf('application/json') >= 0) return r.json();
+        return r.text();
+      });
+    }
+
+    function findOrCreateFolder() {
+      var cfg = getDriveConfig();
+      var name = (cfg.folderName || 'Rent app').replace(/'/g, "\\'");
+      var q = "name='" + name + "' and mimeType='application/vnd.google-apps.folder' and trashed=false";
+      return driveFetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name)')
+        .then(function(data) {
+          if (data.files && data.files.length) return data.files[0].id;
+          // create folder
+          return driveFetch('https://www.googleapis.com/drive/v3/files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: cfg.folderName || 'Rent app',
+              mimeType: 'application/vnd.google-apps.folder'
+            })
+          }).then(function(f){ return f.id; });
+        });
+    }
+
+    function findDataFile(folderId) {
+      var q = "name='" + DRIVE_FILE_NAME + "' and '" + folderId + "' in parents and trashed=false";
+      return driveFetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name,modifiedTime)')
+        .then(function(data) {
+          if (data.files && data.files.length) return data.files[0];
+          return null;
+        });
+    }
+
+    function driveUpload(silent) {
+      if (!_driveAccessToken) { if (!silent) toast('আগে Google সাইন-ইন করুন'); return; }
+      if (!silent) toast('আপলোড হচ্ছে...');
+      var payload = JSON.stringify(state);
+      findOrCreateFolder().then(function(folderId) {
+        return findDataFile(folderId).then(function(existing) {
+          var metadata, url, method;
+          if (existing) {
+            // update
+            url = 'https://www.googleapis.com/upload/drive/v3/files/' + existing.id + '?uploadType=media';
+            return driveFetch(url, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: payload
+            }).then(function() {
+              getDriveConfig().fileId = existing.id;
+              getDriveConfig().lastSync = new Date().toISOString();
+              persistLocal();
+              if (!silent) { toast('Drive এ সেভ হয়েছে ✓'); render(); }
+              else updateSyncIndicator();
+            });
+          } else {
+            // create multipart
+            var meta = { name: DRIVE_FILE_NAME, parents: [folderId] };
+            var boundary = 'foo_bar_baz';
+            var body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' +
+              JSON.stringify(meta) + '\r\n--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' +
+              payload + '\r\n--' + boundary + '--';
+            return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+              method: 'POST',
+              headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+              body: body
+            }).then(function(f) {
+              getDriveConfig().fileId = f.id;
+              getDriveConfig().lastSync = new Date().toISOString();
+              persistLocal();
+              if (!silent) { toast('Drive এ সেভ হয়েছে ✓'); render(); }
+              else updateSyncIndicator();
+            });
+          }
+        });
+      }).catch(function(e) {
+        console.error(e);
+        if (!silent) toast('আপলোড ব্যর্থ — Client ID / পারমিশন চেক করুন');
+      });
+    }
+    function updateSyncIndicator() {
+      var el = document.getElementById('drive-last-sync-text');
+      if (el && getDriveConfig().lastSync) el.textContent = new Date(getDriveConfig().lastSync).toLocaleString();
+    }
+
+    function driveDownload() {
+      if (!_driveAccessToken) return toast('আগে Google সাইন-ইন করুন');
+      toast('ডাউনলোড হচ্ছে...');
+      findOrCreateFolder().then(function(folderId) {
+        return findDataFile(folderId).then(function(existing) {
+          if (!existing) {
+            toast('Drive এ এখনো কোনো ব্যাকআপ নেই — আগে আপলোড করুন');
+            return;
+          }
+          return driveFetch('https://www.googleapis.com/drive/v3/files/' + existing.id + '?alt=media')
+            .then(function(data) {
+              var parsed = typeof data === 'string' ? JSON.parse(data) : data;
+              if (!parsed.tenants) throw new Error('invalid data');
+              if (!confirm('Drive এর ডাটা দিয়ে লোকাল ডাটা বদলে যাবে। চালিয়ে যাবেন?')) return;
+              state = parsed;
+              if (!state.currentMonth) state.currentMonth = getCurrentMonth();
+              if (!state.drive) state.drive = getDriveConfig();
+              getDriveConfig().fileId = existing.id;
+              getDriveConfig().lastSync = new Date().toISOString();
+              // keep clientId if was set locally
+              persistLocal();
+              toast('Drive থেকে লোড হয়েছে ✓');
+              navigate('home');
+            });
+        });
+      }).catch(function(e) {
+        console.error(e);
+        toast('ডাউনলোড ব্যর্থ');
+      });
+    }
+
+    function saveDriveSettings() {
+      var cfg = getDriveConfig();
+      cfg.clientId = (document.getElementById('drive-client-id') || {}).value || '';
+      cfg.folderName = (document.getElementById('drive-folder') || {}).value || 'Rent app';
+      saveState();
+      toast('Drive সেটিংস সেভ ✓');
+    }
+
+    
+    function exportData() {
+      var blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'bari-bhara-backup-' + getCurrentMonth() + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('ব্যাকআপ ডাউনলোড হয়েছে');
+    }
+    function importData(input) {
+      var file = input.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var data = JSON.parse(e.target.result);
+          if (data.tenants && Array.isArray(data.tenants)) {
+            state = data;
+            if (!state.currentMonth) state.currentMonth = getCurrentMonth();
+            saveState(); toast('রিস্টোর সফল ✓'); navigate('home');
+          } else toast('ভুল ফাইল');
+        } catch(err) { toast('ফাইল পড়া যায়নি'); }
+      };
+      reader.readAsText(file);
+    }
+    function resetData() {
+      if (!confirm('সব ডাটা মুছে যাবে। নিশ্চিত?')) return;
+      localStorage.removeItem('rentAppData_v2');
+      localStorage.removeItem('rentAppData');
+      loadState(); toast('রিসেট হয়েছে'); navigate('home');
+    }
+    loadState();
+    render();
+    trySilentDriveSignIn();
+    var style = document.createElement('style');
+    style.textContent = '@media print { body * { visibility: hidden !important; } #receipt-box, #receipt-box * { visibility: visible !important; } #receipt-box { position: absolute; left: 0; top: 0; width: 100%; } .modal-overlay, nav, header, .btn-row, .modal-header { display: none !important; } .receipt { break-inside: avoid; } }';
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>
