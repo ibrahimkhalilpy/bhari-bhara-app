@@ -1992,7 +1992,7 @@
       });
     }
     function validateLicenseKey(key, cb) {
-      if (!LICENSE_SHEET_CSV_URL || LICENSE_SHEET_CSV_URL.indexOf('https://docs.google.com/spreadsheets/d/e/2PACX-1vRmfcLHrp0GwaiBYuaJwDUpnrQtE3kQmjFkUFJaK_YBxpVuo_LrimgGjESv2vo4JLv8XRpPgQZpjSZ4/pub?gid=0&single=true&output=csv') === 0) {
+      if (!LICENSE_SHEET_CSV_URL || LICENSE_SHEET_CSV_URL.indexOf('PASTE_YOUR') === 0) {
         cb('not_configured'); return;
       }
       fetch(LICENSE_SHEET_CSV_URL).then(function(r) {
