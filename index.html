@@ -1780,8 +1780,10 @@
       document.title = name;
     }
 
+    var DEFAULT_CLIENT_ID = '924689341359-hoal946tq5s99h6bti9asf14aiuhqfef.apps.googleusercontent.com';
     function getDriveConfig() {
-      if (!state.drive) state.drive = { clientId: '', folderName: 'Rent app', fileId: null, lastSync: null };
+      if (!state.drive) state.drive = { clientId: DEFAULT_CLIENT_ID, folderName: 'Rent app', fileId: null, lastSync: null };
+      if (!state.drive.clientId) state.drive.clientId = DEFAULT_CLIENT_ID;
       return state.drive;
     }
 
