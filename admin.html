@@ -68,7 +68,7 @@
 
   <script>
     // ⚠️ এখানে আপনার Apps Script Web App-এর লিংক বসান (index.html-এ যেটা LICENSE_BIND_SCRIPT_URL এ বসিয়েছেন, একই লিংক)
-    var ADMIN_SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+    var ADMIN_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYjBGuXPV68xbqVCkR7fuXlAqELzxk2m-utONwx77iHU2defii34EgOHs7kFvMFdAE/exec';
 
     function loadDashboard() {
       var token = document.getElementById('token-input').value.trim();
@@ -87,6 +87,12 @@
       });
     }
 
+    function fmtDate(val) {
+      if (!val) return '-';
+      var s = String(val);
+      var m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+      return m ? m[1] : s;
+    }
     function todayISO() {
       var d = new Date();
       return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -130,7 +136,7 @@
         html += '<div class="cust-top"><div><div class="cust-name">' + esc(r.customerName || 'নাম নেই') + '</div><div class="cust-key">কোড: ' + esc(r.key) + '</div></div>';
         html += '<span class="badge ' + (isActive?'active':'expired') + '">' + (isActive ? '✓ সক্রিয়' : '✕ মেয়াদ শেষ') + '</span></div>';
         html += '<div class="cust-meta">';
-        html += '<div>মেয়াদ: <b id="expiry-' + idx + '">' + esc(r.expiry || '-') + '</b> <button class="edit-link" onclick="editField(' + idx + ',\'expiry\',\'' + esc(r.key) + '\')">✏️</button></div>';
+        html += '<div>মেয়াদ: <b id="expiry-' + idx + '">' + esc(fmtDate(r.expiry)) + '</b> <button class="edit-link" onclick="editField(' + idx + ',\'expiry\',\'' + esc(r.key) + '\')">✏️</button></div>';
         html += '<div>Gmail: <b id="email-' + idx + '">' + esc(r.boundEmail || 'এখনো বাঁধা হয়নি') + '</b> <button class="edit-link" onclick="editField(' + idx + ',\'boundEmail\',\'' + esc(r.key) + '\')">✏️</button></div>';
         html += '<div>ভাড়াটিয়া: <b>' + tenants.length + ' জন</b></div>';
         html += '<div>মোট মাসিক ভাড়া: <b>৳' + totalRent.toLocaleString() + '</b></div>';
