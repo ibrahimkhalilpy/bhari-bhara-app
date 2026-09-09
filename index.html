@@ -1691,7 +1691,10 @@
       html += '<div class="card"><div class="section-title">📦 ব্যাকআপ ও রিস্টোর</div>';
       html += '<p style="font-size:0.82rem;color:var(--muted);margin-bottom:10px">সব ডাটা JSON হিসেবে ডাউনলোড করুন। Google Drive এ রাখতে পারবেন।</p>';
       html += '<button class="btn btn-primary" onclick="exportData()">⬇️ ব্যাকআপ ডাউনলোড</button>';
-      html += '<label style="margin-top:12px">রিস্টোর (JSON ফাইল)</label><input type="file" accept=".json" onchange="importData(this)" /></div>';
+      html += '<label style="margin-top:12px">রিস্টোর (JSON ফাইল)</label><input type="file" accept=".json" onchange="importData(this)" />';
+      html += '<label style="margin-top:12px">অথবা JSON টেক্সট পেস্ট করে রিস্টোর করুন</label>';
+      html += '<textarea id="paste-json-box" rows="4" placeholder="এখানে DataJSON কলাম থেকে কপি করা টেক্সট পেস্ট করুন" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--rule);font-size:0.8rem;font-family:monospace;margin-bottom:10px"></textarea>';
+      html += '<button class="btn btn-sm btn-secondary" onclick="importFromPaste()">📋 পেস্ট থেকে রিস্টোর করুন</button></div>';
       html += '<div class="card"><div class="section-title">🔄 রিসেট</div>';
       html += '<p style="font-size:0.82rem;color:var(--muted);margin-bottom:8px">সব ডাটা মুছে ডিফল্ট ১১ জন দিয়ে শুরু।</p>';
       html += '<button class="btn btn-danger" onclick="resetData()">রিসেট করুন</button></div>';
@@ -1883,7 +1886,7 @@
 
     // এই স্ক্রিপ্ট URL বসালে বাইন্ডিং তথ্য সরাসরি আপনার Google Sheet-এ (BoundEmail কলামে) লেখা হবে।
     // সেটআপ গাইড দেখুন — Extensions > Apps Script > Deploy as Web App।
-    var LICENSE_BIND_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYjBGuXPV68xbqVCkR7fuXlAqELzxk2m-utONwx77iHU2defii34EgOHs7kFvMFdAE/exec';
+    var LICENSE_BIND_SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 
     function checkLicenseAccountBinding() {
       if (!_driveAccessToken) return;
@@ -2109,6 +2112,19 @@
         } catch(err) { toast('ফাইল পড়া যায়নি'); }
       };
       reader.readAsText(file);
+    }
+    function importFromPaste() {
+      var box = document.getElementById('paste-json-box');
+      var text = box ? box.value.trim() : '';
+      if (!text) { toast('আগে JSON টেক্সট পেস্ট করুন'); return; }
+      try {
+        var data = JSON.parse(text);
+        if (data.tenants && Array.isArray(data.tenants)) {
+          state = data;
+          if (!state.currentMonth) state.currentMonth = getCurrentMonth();
+          saveState(); toast('রিস্টোর সফল ✓'); navigate('home');
+        } else toast('এটা সঠিক ডাটা মনে হচ্ছে না');
+      } catch (err) { toast('টেক্সট পড়া যায়নি — সম্পূর্ণ কপি হয়েছে কিনা দেখুন'); }
     }
     function resetData() {
       if (!confirm('সব ডাটা মুছে যাবে। নিশ্চিত?')) return;
