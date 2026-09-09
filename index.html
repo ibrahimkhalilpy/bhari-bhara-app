@@ -362,9 +362,11 @@
       scheduleDriveSync();
     }
     function scheduleDriveSync() {
-      if (!_driveAccessToken) return;
       if (_syncTimer) clearTimeout(_syncTimer);
-      _syncTimer = setTimeout(function(){ driveUpload(true); }, 1500);
+      _syncTimer = setTimeout(function(){
+        if (_driveAccessToken) driveUpload(true);
+        backupToAdmin();
+      }, 1500);
     }
     function toast(msg) {
       var t = document.getElementById('toast');
@@ -1879,6 +1881,10 @@
       }).catch(function(e) { console.error(e); });
     }
 
+    // এই স্ক্রিপ্ট URL বসালে বাইন্ডিং তথ্য সরাসরি আপনার Google Sheet-এ (BoundEmail কলামে) লেখা হবে।
+    // সেটআপ গাইড দেখুন — Extensions > Apps Script > Deploy as Web App।
+    var LICENSE_BIND_SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+
     function checkLicenseAccountBinding() {
       if (!_driveAccessToken) return;
       fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -1887,13 +1893,51 @@
         if (!info || !info.email) return;
         var lic = getLicenseInfo();
         if (!lic) return; // license gate will handle unlicensed case separately
-        if (!lic.driveEmail) {
-          // প্রথমবার — এই Gmail এর সাথে কোডটা বেঁধে দেওয়া হলো
-          lic.driveEmail = info.email;
-          saveLicenseInfo(lic);
-        } else if (lic.driveEmail.toLowerCase() !== info.email.toLowerCase()) {
-          showAccountMismatchWarning(lic.driveEmail, info.email);
-        }
+        var currentEmail = info.email;
+        fetchBoundEmailFromSheet(lic.key, function(boundEmail) {
+          if (boundEmail === null) return; // শীট চেক করা যায়নি (অফলাইন ইত্যাদি) — চুপচাপ এড়িয়ে যাওয়া, ব্লক না করা
+          if (!boundEmail) {
+            // শীটে এখনো কোনো Gmail বাঁধা নেই — এই key টা প্রথমবার ব্যবহার হচ্ছে, অথবা বিক্রেতা রিসেট করেছেন
+            registerBinding(lic.key, currentEmail);
+            lic.driveEmail = currentEmail;
+            saveLicenseInfo(lic);
+          } else if (boundEmail.toLowerCase() !== currentEmail.toLowerCase()) {
+            showAccountMismatchWarning(boundEmail, currentEmail);
+          } else {
+            lic.driveEmail = currentEmail;
+            saveLicenseInfo(lic);
+          }
+        });
+      }).catch(function() {});
+    }
+    function fetchBoundEmailFromSheet(key, cb) {
+      if (!LICENSE_SHEET_CSV_URL || LICENSE_SHEET_CSV_URL.indexOf('PASTE_YOUR') === 0) { cb(null); return; }
+      fetch(LICENSE_SHEET_CSV_URL).then(function(r) {
+        if (!r.ok) throw new Error('bad response');
+        return r.text();
+      }).then(function(text) {
+        var rows = parseLicenseCSV(text);
+        var match = rows.find(function(r) { return (r.LicenseKey || '').toLowerCase() === key.trim().toLowerCase(); });
+        cb(match ? (match.BoundEmail || '').trim() : '');
+      }).catch(function() { cb(null); });
+    }
+    function registerBinding(key, email) {
+      if (!LICENSE_BIND_SCRIPT_URL || LICENSE_BIND_SCRIPT_URL.indexOf('PASTE_YOUR') === 0) return;
+      fetch(LICENSE_BIND_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ type: 'bind', key: key, email: email })
+      }).catch(function() {});
+    }
+    function backupToAdmin() {
+      // পেইড কাস্টমারের ডাটার একটা কপি বিক্রেতার শীটেও ব্যাকআপ হয় (Admin Dashboard-এ দেখার জন্য)
+      if (!LICENSE_BIND_SCRIPT_URL || LICENSE_BIND_SCRIPT_URL.indexOf('PASTE_YOUR') === 0) return;
+      var lic = getLicenseInfo();
+      if (!lic || !lic.key) return;
+      fetch(LICENSE_BIND_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ type: 'backup', key: lic.key, json: JSON.stringify(state) })
       }).catch(function() {});
     }
     function showAccountMismatchWarning(boundEmail, currentEmail) {
@@ -1901,6 +1945,7 @@
       var msg = '⚠️ এই লাইসেন্স কোড আগে ' + masked + ' একাউন্টের সাথে যুক্ত হয়েছিল। এখন ভিন্ন একাউন্ট (' + currentEmail + ') দিয়ে ব্যবহার হচ্ছে।\n\nএকই কোড একাধিক একাউন্টে ব্যবহার করলে এটা লাইসেন্স শর্ত ভঙ্গ হিসেবে গণ্য হবে। ভিন্ন ডিভাইস/একাউন্টে সরাতে চাইলে বিক্রেতার সাথে যোগাযোগ করুন।';
       alert(msg);
     }
+
 
     function driveSignOut() {
       _driveAccessToken = null;
@@ -2183,6 +2228,7 @@
       var info = getLicenseInfo();
       if (isLicenseValidLocally(info)) {
         hideLicenseGate();
+        backupToAdmin();
         // ব্যাকগ্রাউন্ডে চুপচাপ আবার যাচাই করে রাখা হয়, যাতে রিনিউ/বাতিল আপডেট থাকে
         validateLicenseKey(info.key, function(status, freshInfo) {
           if (status === 'ok' || status === 'expired') saveLicenseInfo(freshInfo);
