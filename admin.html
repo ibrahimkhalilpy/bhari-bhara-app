@@ -44,6 +44,8 @@
   .cust-meta{margin-top:10px;font-size:0.86rem;color:var(--ink-soft);display:grid;grid-template-columns:1fr 1fr;gap:6px;}
   .cust-meta b{color:var(--ink);}
   .toggle-btn{margin-top:10px;font-size:0.8rem;color:var(--brass-dark);font-weight:700;cursor:pointer;background:none;border:none;padding:0;}
+  .edit-link{background:none;border:none;cursor:pointer;font-size:0.8rem;padding:0 2px;opacity:0.7;}
+  .edit-link:hover{opacity:1;}
   .detail{margin-top:12px;border-top:1px dashed var(--rule);padding-top:10px;display:none;}
   .detail.show{display:block;}
   .tenant-line{display:flex;justify-content:space-between;font-size:0.85rem;padding:5px 0;border-bottom:1px solid var(--paper-deep);}
@@ -66,7 +68,7 @@
 
   <script>
     // ⚠️ এখানে আপনার Apps Script Web App-এর লিংক বসান (index.html-এ যেটা LICENSE_BIND_SCRIPT_URL এ বসিয়েছেন, একই লিংক)
-    var ADMIN_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYjBGuXPV68xbqVCkR7fuXlAqELzxk2m-utONwx77iHU2defii34EgOHs7kFvMFdAE/exec';
+    var ADMIN_SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 
     function loadDashboard() {
       var token = document.getElementById('token-input').value.trim();
@@ -128,8 +130,8 @@
         html += '<div class="cust-top"><div><div class="cust-name">' + esc(r.customerName || 'নাম নেই') + '</div><div class="cust-key">কোড: ' + esc(r.key) + '</div></div>';
         html += '<span class="badge ' + (isActive?'active':'expired') + '">' + (isActive ? '✓ সক্রিয়' : '✕ মেয়াদ শেষ') + '</span></div>';
         html += '<div class="cust-meta">';
-        html += '<div>মেয়াদ: <b>' + esc(r.expiry || '-') + '</b></div>';
-        html += '<div>Gmail: <b>' + esc(r.boundEmail || 'এখনো বাঁধা হয়নি') + '</b></div>';
+        html += '<div>মেয়াদ: <b id="expiry-' + idx + '">' + esc(r.expiry || '-') + '</b> <button class="edit-link" onclick="editField(' + idx + ',\'expiry\',\'' + esc(r.key) + '\')">✏️</button></div>';
+        html += '<div>Gmail: <b id="email-' + idx + '">' + esc(r.boundEmail || 'এখনো বাঁধা হয়নি') + '</b> <button class="edit-link" onclick="editField(' + idx + ',\'boundEmail\',\'' + esc(r.key) + '\')">✏️</button></div>';
         html += '<div>ভাড়াটিয়া: <b>' + tenants.length + ' জন</b></div>';
         html += '<div>মোট মাসিক ভাড়া: <b>৳' + totalRent.toLocaleString() + '</b></div>';
         html += '</div>';
@@ -149,6 +151,22 @@
       dash.innerHTML = html;
     }
 
+    function editField(idx, field, key) {
+      var el = document.getElementById((field === 'expiry' ? 'expiry-' : 'email-') + idx);
+      var current = el.textContent === 'এখনো বাঁধা হয়নি' ? '' : el.textContent;
+      var placeholder = field === 'expiry' ? 'YYYY-MM-DD' : 'email@gmail.com';
+      el.outerHTML = '<span id="' + (field==='expiry'?'expiry-':'email-') + idx + '">' +
+        '<input id="inp-' + idx + '-' + field + '" value="' + esc(current) + '" placeholder="' + placeholder + '" style="padding:5px 8px;border-radius:6px;border:1.5px solid var(--rule);font-size:0.85rem;width:150px" />' +
+        ' <button onclick="saveField(' + idx + ',\'' + field + '\',\'' + esc(key) + '\')" style="padding:5px 10px;border-radius:6px;border:none;background:var(--brass);color:#FBF3DE;font-weight:700;font-size:0.8rem;cursor:pointer">সেভ</button></span>';
+    }
+    function saveField(idx, field, key) {
+      var val = document.getElementById('inp-' + idx + '-' + field).value.trim();
+      var token = localStorage.getItem('adminToken');
+      fetch(ADMIN_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ type: 'admin_update', token: token, key: key, field: field, value: val })
+      }).finally(function() { location.reload(); });
+    }
     function toggleDetail(idx) {
       document.getElementById('detail-' + idx).classList.toggle('show');
     }
