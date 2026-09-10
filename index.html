@@ -1104,6 +1104,41 @@
       return lines.join('\n');
     }
 
+    function buildSmsMessageWhatsapp(tenant, paymentsInfo, totalPaid, totalDueAfter, payMethod) {
+      var L = state.landlord || { name: 'মোঃ জয়নাল আবেদিন', address: 'আনন্দ নগর, মেরুল বাড্ডা', phone: '01313046961' };
+      var now = new Date();
+      var dateStr = now.toLocaleDateString('bn-BD');
+      var lines = [];
+      lines.push('✅ *পেমেন্ট রসিদ*');
+      lines.push('👤 ' + tenant.name + ' | ' + floorText(tenant));
+      lines.push('🏠 ' + L.name + ', ' + L.address);
+      lines.push('');
+      paymentsInfo.forEach(function(pi) {
+        var bill = calcBill(tenant, pi.month);
+        var rentLabel = monthLabel(pi.month);
+        var utilLabel = utilMonthLabel(pi.month);
+        lines.push('*' + rentLabel + ':*');
+        lines.push('▪️ ভাড়া (' + rentLabel + '): ৳' + bill.rent);
+        if (bill.water) lines.push('▪️ পানি (' + utilLabel + '): ৳' + bill.water);
+        if (bill.lineGas) lines.push('▪️ লাইন গ্যাস (' + utilLabel + '): ৳' + bill.lineGas);
+        if (bill.extras && bill.extras.length) {
+          bill.extras.forEach(function(ex) { lines.push('▪️ ' + ex.name + ' (' + utilLabel + '): ৳' + ex.amount); });
+        }
+        if (tenant.hasSubMeter) {
+          var cr = (bill.currentReading !== null && bill.currentReading !== undefined) ? bill.currentReading : '-';
+          var pr = bill.prevReading || 0;
+          lines.push('▪️ সাব-মিটার: ' + pr + ' → ' + cr + ' (' + (bill.units || 0) + ' ইউনিট) = ৳' + (bill.electricity || 0));
+        }
+        lines.push('মোট: ৳' + bill.total + (pi.paidThis ? ' | পেইড: ৳' + pi.paidThis : ''));
+        lines.push('');
+      });
+      lines.push('*সর্বমোট পরিশোধ: ৳' + totalPaid + '*' + (payMethod ? ' (' + payMethod + ')' : ''));
+      if (totalDueAfter) lines.push('_বাকি রইলো: ৳' + totalDueAfter + '_');
+      else lines.push('_কোনো বকেয়া নেই ✓_');
+      lines.push('📅 ' + dateStr);
+      return lines.join('\n');
+    }
+
     function buildBillSms(tenant, monthKey) {
       var L = state.landlord || { name: 'মোঃ জয়নাল আবেদিন', address: 'আনন্দ নগর, মেরুল বাড্ডা', phone: '01313046961' };
       var bill = calcBill(tenant, monthKey);
@@ -1134,15 +1169,46 @@
       return parts.join('\n');
     }
 
+    function buildBillWhatsapp(tenant, monthKey) {
+      var L = state.landlord || { name: 'মোঃ জয়নাল আবেদিন', address: 'আনন্দ নগর, মেরুল বাড্ডা', phone: '01313046961' };
+      var bill = calcBill(tenant, monthKey);
+      var rentLabel = monthLabel(monthKey);
+      var utilLabel = utilMonthLabel(monthKey);
+      var lines = [];
+      lines.push('🧾 *ভাড়ার বিল — ' + rentLabel + '*');
+      lines.push('👤 ' + tenant.name + ' | ' + floorText(tenant));
+      lines.push('🏠 ' + L.name + ', ' + L.address);
+      lines.push('');
+      lines.push('*বিবরণ:*');
+      lines.push('▪️ ভাড়া (' + rentLabel + '): ৳' + bill.rent);
+      if (bill.water) lines.push('▪️ পানি (' + utilLabel + '): ৳' + bill.water);
+      if (bill.lineGas) lines.push('▪️ লাইন গ্যাস (' + utilLabel + '): ৳' + bill.lineGas);
+      if (bill.extras && bill.extras.length) {
+        bill.extras.forEach(function(ex) { lines.push('▪️ ' + ex.name + ' (' + utilLabel + '): ৳' + ex.amount); });
+      }
+      if (tenant.hasSubMeter) {
+        var cr = (bill.currentReading !== null && bill.currentReading !== undefined) ? bill.currentReading : '-';
+        var pr = bill.prevReading || 0;
+        lines.push('▪️ সাব-মিটার (' + utilLabel + '): ' + pr + ' → ' + cr + ' (' + (bill.units || 0) + ' ইউনিট) = ৳' + (bill.electricity || 0));
+      }
+      lines.push('');
+      lines.push('*সর্বমোট: ৳' + bill.total + '*');
+      if (bill.due) lines.push('_আগের বাকি সহ মোট বকেয়া: ৳' + bill.due + '_');
+      return lines.join('\n');
+    }
+
     function sendBillSms(tenantId, monthKey) {
       var t = state.tenants.find(function(x){ return x.id === tenantId; });
       if (!t) return;
       ensureMonthBills(monthKey);
       var msg = buildBillSms(t, monthKey);
+      var msgWA = buildBillWhatsapp(t, monthKey);
       var b = state.bills[monthKey][tenantId];
       b.billSmsText = msg;
+      b.billSmsTextWA = msgWA;
       saveState();
       window._lastSms = msg;
+      window._lastSmsWA = msgWA;
       window._lastPaidMonths = [monthKey];
       window._billSmsMode = true;
       showBillSmsModal(tenantId, msg, monthKey);
@@ -1232,12 +1298,16 @@
       var b = state.bills[monthKey][tenantId];
       var t = state.tenants.find(function(x){ return x.id === tenantId; });
       var msg = (b && b.smsText) ? b.smsText : '';
+      var msgWA = (b && b.smsTextWA) ? b.smsTextWA : '';
       if (!msg) {
         // rebuild simple for this month
         var bill = calcBill(t, monthKey);
-        msg = buildSmsMessage(t, [{month: monthKey, bill: bill, paidThis: bill.paidAmount}], bill.paidAmount, bill.due);
+        var pInfo = [{month: monthKey, bill: bill, paidThis: bill.paidAmount}];
+        msg = buildSmsMessage(t, pInfo, bill.paidAmount, bill.due);
+        msgWA = buildSmsMessageWhatsapp(t, pInfo, bill.paidAmount, bill.due);
       }
       window._lastSms = msg;
+      window._lastSmsWA = msgWA || msg;
       window._lastPaidMonths = [monthKey];
       showSmsAfterPayment(tenantId, msg);
     }
@@ -1249,7 +1319,7 @@
       return digits;
     }
     function sendWhatsappTo(phone) {
-      var msg = window._lastSms || '';
+      var msg = window._lastSmsWA || window._lastSms || '';
       var num = toWhatsappNumber(phone);
       var url = 'https://wa.me/' + num + '?text=' + encodeURIComponent(msg);
       window.open(url, '_blank');
@@ -1332,6 +1402,7 @@
 
       var totalDueAfter = getTotalDue(t);
       var smsMsg = buildSmsMessage(t, paymentsInfo, amount, totalDueAfter, payMethod);
+      var smsMsgWA = buildSmsMessageWhatsapp(t, paymentsInfo, amount, totalDueAfter, payMethod);
 
       var monthAmounts = {};
       paymentsInfo.forEach(function(pi){ monthAmounts[pi.month] = pi.paidThis; });
@@ -1348,15 +1419,18 @@
         payMethod: payMethod,
         totalBill: paymentsInfo.reduce(function(s, p){ return s + p.bill.total; }, 0),
         remainingDue: totalDueAfter,
-        smsText: smsMsg
+        smsText: smsMsg,
+        smsTextWA: smsMsgWA
       });
 
       paidMonths.forEach(function(mk) {
         state.bills[mk][id].smsText = smsMsg;
+        state.bills[mk][id].smsTextWA = smsMsgWA;
         state.bills[mk][id].smsSent = false;
       });
 
       window._lastSms = smsMsg;
+      window._lastSmsWA = smsMsgWA;
       window._lastPaidMonths = paidMonths.slice();
       saveState();
       toast('পেমেন্ট রেকর্ড হয়েছে ✓');
@@ -1642,6 +1716,7 @@
       var p = state.payments[idx];
       if (!p || !p.smsText) return toast('SMS টেক্সট নেই');
       window._lastSms = p.smsText;
+      window._lastSmsWA = p.smsTextWA || p.smsText;
       window._lastPaidMonths = p.months || [p.month];
       showSmsAfterPayment(p.tenantId, p.smsText);
     }
@@ -1679,6 +1754,7 @@
       } else {
         html += '<p style="font-size:0.82rem;color:var(--success);margin-bottom:8px">✓ কানেক্টেড</p>';
         html += '<p style="font-size:0.85rem;margin-bottom:8px;background:var(--brass-soft);padding:8px 12px;border-radius:8px">📧 সাইন-ইন করা আছে: <b>' + (_connectedEmail || 'লোড হচ্ছে...') + '</b></p>';
+        html += '<button class="btn btn-sm btn-secondary" style="margin-bottom:10px" onclick="forceRecheckBinding()">🔄 বাইন্ডিং আবার চেক করুন</button>';
         html += '<p style="font-size:0.78rem;color:var(--success);margin-bottom:6px">🔄 অটো-সিঙ্ক চালু — অ্যাপ খুললেই Drive থেকে সর্বশেষ ডাটা আসবে, আর যেকোনো পরিবর্তন নিজে থেকেই Drive-এ সেভ হবে</p>';
         if (D.lastSync) html += '<p id="drive-last-sync-wrap" style="font-size:0.75rem;color:var(--muted)">লাস্ট সিঙ্ক: <span id="drive-last-sync-text">' + new Date(D.lastSync).toLocaleString() + '</span></p>';
         html += '<div class="btn-row">';
@@ -1897,6 +1973,11 @@
     // সেটআপ গাইড দেখুন — Extensions > Apps Script > Deploy as Web App।
     var LICENSE_BIND_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYjBGuXPV68xbqVCkR7fuXlAqELzxk2m-utONwx77iHU2defii34EgOHs7kFvMFdAE/exec';
 
+    function forceRecheckBinding() {
+      if (!_driveAccessToken) { toast('আগে সাইন-ইন করুন'); return; }
+      toast('চেক করা হচ্ছে...');
+      checkLicenseAccountBinding(true);
+    }
     var _connectedEmail = null;
     function fetchConnectedEmail() {
       if (!_driveAccessToken) return;
@@ -1906,32 +1987,34 @@
         if (info && info.email) { _connectedEmail = info.email; render(); }
       }).catch(function() {});
     }
-    function checkLicenseAccountBinding() {
+    function checkLicenseAccountBinding(manual) {
       if (!_driveAccessToken) return;
       fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: 'Bearer ' + _driveAccessToken }
       }).then(function(r) { return r.ok ? r.json() : null; }).then(function(info) {
-        if (!info || !info.email) return;
+        if (!info || !info.email) { if (manual) toast('Gmail তথ্য আনা যায়নি'); return; }
         _connectedEmail = info.email;
         render();
         var lic = getLicenseInfo();
         if (!lic) return; // license gate will handle unlicensed case separately
         var currentEmail = info.email;
         fetchBoundEmailFromSheet(lic.key, function(boundEmail) {
-          if (boundEmail === null) return; // শীট চেক করা যায়নি (অফলাইন ইত্যাদি) — চুপচাপ এড়িয়ে যাওয়া, ব্লক না করা
+          if (boundEmail === null) { if (manual) toast('শীট চেক করা যায়নি — ইন্টারনেট দেখুন'); return; }
           if (!boundEmail) {
             // শীটে এখনো কোনো Gmail বাঁধা নেই — এই key টা প্রথমবার ব্যবহার হচ্ছে, অথবা বিক্রেতা রিসেট করেছেন
             registerBinding(lic.key, currentEmail);
             lic.driveEmail = currentEmail;
             saveLicenseInfo(lic);
+            if (manual) toast('বাঁধা হয়ে গেছে ✓ (' + currentEmail + ')');
           } else if (boundEmail.toLowerCase() !== currentEmail.toLowerCase()) {
             showAccountMismatchWarning(boundEmail, currentEmail);
           } else {
             lic.driveEmail = currentEmail;
             saveLicenseInfo(lic);
+            if (manual) toast('আগে থেকেই ঠিকমতো বাঁধা আছে ✓');
           }
         });
-      }).catch(function() {});
+      }).catch(function() { if (manual) toast('নেটওয়ার্ক এরর'); });
     }
     function fetchBoundEmailFromSheet(key, cb) {
       if (!LICENSE_SHEET_CSV_URL || LICENSE_SHEET_CSV_URL.indexOf('PASTE_YOUR') === 0) { cb(null); return; }
