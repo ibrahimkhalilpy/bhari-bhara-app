@@ -1645,6 +1645,7 @@
       var L = state.landlord || { name: 'মোঃ জয়নাল আবেদিন', address: 'আনন্দ নগর, মেরুল বাড্ডা', phone: '01313046961' };
       var D = getDriveConfig();
       var connected = !!_driveAccessToken;
+      if (connected && !_connectedEmail) fetchConnectedEmail();
       var currentTheme = getSavedTheme();
       var html = '<div class="card"><div class="section-title">🎨 অ্যাপের নাম ও রঙ</div>';
       html += '<label>অ্যাপের নাম (উপরে হেডারে দেখাবে)</label>';
@@ -1672,6 +1673,7 @@
         html += '<button class="btn btn-primary" onclick="driveSignIn()">🔐 Google দিয়ে সাইন-ইন</button>';
       } else {
         html += '<p style="font-size:0.82rem;color:var(--success);margin-bottom:8px">✓ কানেক্টেড</p>';
+        html += '<p style="font-size:0.85rem;margin-bottom:8px;background:var(--brass-soft);padding:8px 12px;border-radius:8px">📧 সাইন-ইন করা আছে: <b>' + (_connectedEmail || 'লোড হচ্ছে...') + '</b></p>';
         html += '<p style="font-size:0.78rem;color:var(--success);margin-bottom:6px">🔄 অটো-সিঙ্ক চালু — অ্যাপ খুললেই Drive থেকে সর্বশেষ ডাটা আসবে, আর যেকোনো পরিবর্তন নিজে থেকেই Drive-এ সেভ হবে</p>';
         if (D.lastSync) html += '<p id="drive-last-sync-wrap" style="font-size:0.75rem;color:var(--muted)">লাস্ট সিঙ্ক: <span id="drive-last-sync-text">' + new Date(D.lastSync).toLocaleString() + '</span></p>';
         html += '<div class="btn-row">';
@@ -1888,14 +1890,25 @@
 
     // এই স্ক্রিপ্ট URL বসালে বাইন্ডিং তথ্য সরাসরি আপনার Google Sheet-এ (BoundEmail কলামে) লেখা হবে।
     // সেটআপ গাইড দেখুন — Extensions > Apps Script > Deploy as Web App।
-    var LICENSE_BIND_SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+    var LICENSE_BIND_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYjBGuXPV68xbqVCkR7fuXlAqELzxk2m-utONwx77iHU2defii34EgOHs7kFvMFdAE/exec';
 
+    var _connectedEmail = null;
+    function fetchConnectedEmail() {
+      if (!_driveAccessToken) return;
+      fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: 'Bearer ' + _driveAccessToken }
+      }).then(function(r) { return r.ok ? r.json() : null; }).then(function(info) {
+        if (info && info.email) { _connectedEmail = info.email; render(); }
+      }).catch(function() {});
+    }
     function checkLicenseAccountBinding() {
       if (!_driveAccessToken) return;
       fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: 'Bearer ' + _driveAccessToken }
       }).then(function(r) { return r.ok ? r.json() : null; }).then(function(info) {
         if (!info || !info.email) return;
+        _connectedEmail = info.email;
+        render();
         var lic = getLicenseInfo();
         if (!lic) return; // license gate will handle unlicensed case separately
         var currentEmail = info.email;
