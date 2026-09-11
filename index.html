@@ -1284,7 +1284,7 @@
       ctx.restore();
     }
 
-    function generateReceiptCanvas(tenant, paymentsInfo, totalPaid, totalDueAfter, payMethod, cb) {
+    function generateReceiptCanvas(tenant, paymentsInfo, totalPaid, totalDueAfter, payMethod, note, cb) {
       var W = 680, H = 1150;
       var canvas = document.createElement('canvas');
       canvas.width = W; canvas.height = H;
@@ -1378,7 +1378,7 @@
         dashedLine(y);
         y += 90;
 
-        // ==== PAID stamp ====
+        // ==== স্ট্যাম্প: নোট থাকলে নোট টেক্সট, নাহলে PAID ====
         ctx.save();
         ctx.translate(W / 2, y + 60);
         ctx.rotate(-10 * Math.PI / 180);
@@ -1387,10 +1387,28 @@
         ctx.strokeStyle = '#111'; ctx.lineWidth = 3; ctx.stroke();
         ctx.beginPath(); ctx.arc(0, 0, R - 14, 0, 2 * Math.PI);
         ctx.lineWidth = 1.5; ctx.stroke();
-        drawRingText(ctx, '★ ধন্যবাদ ★ ধন্যবাদ ★ ধন্যবাদ ★', R - 30, '700 13px ' + FONT);
+        var hasNote = note && note.trim().length > 0;
+        drawRingText(ctx, hasNote ? '★ মনে রাখুন ★ মনে রাখুন ★' : '★ ধন্যবাদ ★ ধন্যবাদ ★ ধন্যবাদ ★', R - 30, '700 13px ' + FONT);
         ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.font = '700 34px ' + FONT;
-        ctx.fillText('PAID', 0, 4);
+        if (hasNote) {
+          ctx.font = '700 16px ' + FONT;
+          var maxW = (R - 14) * 1.55;
+          var words = note.trim().split(/\s+/);
+          var lines = []; var cur = '';
+          words.forEach(function(w) {
+            var test = cur ? cur + ' ' + w : w;
+            if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; }
+            else cur = test;
+          });
+          if (cur) lines.push(cur);
+          if (lines.length > 3) lines = lines.slice(0, 3);
+          var lh = 20;
+          var startY = -((lines.length - 1) * lh) / 2;
+          lines.forEach(function(line, i) { ctx.fillText(line, 0, startY + i * lh); });
+        } else {
+          ctx.font = '700 34px ' + FONT;
+          ctx.fillText('PAID', 0, 4);
+        }
         ctx.restore();
 
         y += 190;
@@ -1413,7 +1431,7 @@
       var t = state.tenants.find(function(x) { return x.id === d.tenantId; });
       if (!t) return;
       toast('রসিদের ছবি তৈরি হচ্ছে...');
-      generateReceiptCanvas(t, d.paymentsInfo, d.totalPaid, d.totalDueAfter, d.payMethod, function(blob) {
+      generateReceiptCanvas(t, d.paymentsInfo, d.totalPaid, d.totalDueAfter, d.payMethod, d.note || '', function(blob) {
         if (!blob) { toast('ছবি তৈরি করা যায়নি'); return; }
         var file;
         try { file = new File([blob], 'receipt-' + t.name + '.png', { type: 'image/png' }); } catch (e) { file = null; }
@@ -1613,7 +1631,7 @@
       window._lastSms = smsMsg;
       window._lastSmsWA = smsMsgWA;
       window._lastPaidMonths = paidMonths.slice();
-      window._lastReceiptData = { tenantId: id, paymentsInfo: paymentsInfo, totalPaid: amount, totalDueAfter: totalDueAfter, payMethod: payMethod };
+      window._lastReceiptData = { tenantId: id, paymentsInfo: paymentsInfo, totalPaid: amount, totalDueAfter: totalDueAfter, payMethod: payMethod, note: note };
       saveState();
       toast('পেমেন্ট রেকর্ড হয়েছে ✓');
       showSmsAfterPayment(id, smsMsg);
@@ -1902,7 +1920,7 @@
       window._lastPaidMonths = p.months || [p.month];
       var months = p.months || [p.month];
       var pInfo = months.map(function(mk) { return { month: mk }; });
-      window._lastReceiptData = { tenantId: p.tenantId, paymentsInfo: pInfo, totalPaid: p.amount, totalDueAfter: p.remainingDue, payMethod: p.payMethod || '' };
+      window._lastReceiptData = { tenantId: p.tenantId, paymentsInfo: pInfo, totalPaid: p.amount, totalDueAfter: p.remainingDue, payMethod: p.payMethod || '', note: p.note || '' };
       showSmsAfterPayment(p.tenantId, p.smsText);
     }
 
