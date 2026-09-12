@@ -2107,6 +2107,7 @@
       html += '• <strong>SMS/WhatsApp:</strong> পেমেন্ট হলে মেসেজ তৈরি হয়। “SMS পাঠান” বা “WhatsApp” চাপলে সংশ্লিষ্ট অ্যাপ খুলবে।<br>';
       html += '• <strong>লাইন গ্যাস:</strong> শুধু যাদের আছে তাদের দেখায়।<br>';
       html += '• <strong>বাল্ক প্রিন্ট:</strong> একসাথে সব রসিদ।</p></div>';
+      html += '<p style="text-align:center;font-size:0.7rem;color:var(--muted);margin-top:6px">অ্যাপ ভার্সন: ' + APP_VERSION + '</p>';
       return html;
     }
 
@@ -2679,6 +2680,8 @@
       }
     }
 
+    var APP_VERSION = '2026-09-12-v3-note-amount-fix';
+    console.log('বাড়ি ভাড়া ম্যানেজার ভার্সন:', APP_VERSION);
     loadState();
     applyTheme(getSavedTheme());
     render();
