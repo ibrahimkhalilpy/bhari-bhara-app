@@ -1410,9 +1410,14 @@
         dashedLine(y);
         y += 90;
 
-        // ==== স্ট্যাম্প: নোট থাকলে বকেয়া স্ট্যাম্প (টাকার পরিমাণসহ), নাহলে PAID ====
+        // ==== স্ট্যাম্প: নোট ঘরে সংখ্যা থাকলে সেই সংখ্যাটাই বকেয়া হিসেবে দেখাবে, নাহলে PAID ====
         var hasNote = note && note.trim().length > 0;
-        if (hasNote) drawStamp(ctx, W / 2, y + 60, -10, FONT, 'due', totalDueAfter);
+        var noteAmount = 0;
+        if (hasNote) {
+          var numMatch = note.replace(/,/g, '').match(/\d+/);
+          noteAmount = numMatch ? parseInt(numMatch[0], 10) : totalDueAfter;
+        }
+        if (hasNote) drawStamp(ctx, W / 2, y + 60, -10, FONT, 'due', noteAmount);
         else drawStamp(ctx, W / 2, y + 60, -10, FONT, 'paid', 0);
 
         y += 190;
