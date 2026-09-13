@@ -889,7 +889,7 @@
             html += '<span class="chip">' + ex.name + '(' + utilMonthLabel(m) + ') ৳' + ex.amount + '</span>';
           });
         }
-        html += '</div>' + statusHtml;
+        html += '</div>';
         if (t.hasSubMeter) {
           html += '<div class="reading-box"><div><label>Previous</label><input type="number" value="' + bill.prevReading + '" readonly /></div>';
           html += '<div><label>নতুন রিডিং</label><input type="number" id="reading-' + t.id + '" value="' + (bill.currentReading !== null ? bill.currentReading : '') + '" placeholder="লিখুন" onchange="updateReading(\'' + t.id + '\')" /></div>';
@@ -2676,7 +2676,7 @@
       }
     }
 
-    var APP_VERSION = '2026-09-13-v5-remove-prevdue-line';
+    var APP_VERSION = '2026-09-13-v6-remove-status-chip';
     console.log('বাড়ি ভাড়া ম্যানেজার ভার্সন:', APP_VERSION);
     loadState();
     applyTheme(getSavedTheme());
