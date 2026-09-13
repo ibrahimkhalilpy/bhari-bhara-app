@@ -1390,12 +1390,19 @@
         y += 42;
 
         var dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+        var hasNote = note && note.trim().length > 0;
+        var noteAmount = 0;
+        if (hasNote) {
+          var numMatch = note.replace(/,/g, '').match(/\d+/);
+          noteAmount = numMatch ? parseInt(numMatch[0], 10) : totalDueAfter;
+        }
+        var dueToShow = hasNote ? noteAmount : (totalDueAfter || 0);
         var rows2 = [
           ['মাধ্যম', payMethod || '-'],
           ['তারিখ', dateStr],
           ['বাড়িওয়ালা', L.name],
           ['পরিশোধিত', 'BDT ' + totalPaid],
-          ['বাকি', 'BDT ' + (totalDueAfter || 0)]
+          ['বাকি', 'BDT ' + dueToShow]
         ];
         rows2.forEach(function(r) { row(y, r[0], r[1]); y += 46; });
         y -= 46;
@@ -1411,12 +1418,6 @@
         y += 90;
 
         // ==== স্ট্যাম্প: নোট ঘরে সংখ্যা থাকলে সেই সংখ্যাটাই বকেয়া হিসেবে দেখাবে, নাহলে PAID ====
-        var hasNote = note && note.trim().length > 0;
-        var noteAmount = 0;
-        if (hasNote) {
-          var numMatch = note.replace(/,/g, '').match(/\d+/);
-          noteAmount = numMatch ? parseInt(numMatch[0], 10) : totalDueAfter;
-        }
         if (hasNote) drawStamp(ctx, W / 2, y + 60, -10, FONT, 'due', noteAmount);
         else drawStamp(ctx, W / 2, y + 60, -10, FONT, 'paid', 0);
 
@@ -2680,7 +2681,7 @@
       }
     }
 
-    var APP_VERSION = '2026-09-12-v3-note-amount-fix';
+    var APP_VERSION = '2026-09-13-v4-due-row-note-fix';
     console.log('বাড়ি ভাড়া ম্যানেজার ভার্সন:', APP_VERSION);
     loadState();
     applyTheme(getSavedTheme());
